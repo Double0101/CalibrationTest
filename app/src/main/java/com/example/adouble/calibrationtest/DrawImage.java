@@ -123,7 +123,6 @@ public class DrawImage extends ImageView {
                                     && rects.get(i)[3] > selectY) {
                                 selectInt = i;
                             }
-
                         }
 
                         if (selectInt != -1) {
