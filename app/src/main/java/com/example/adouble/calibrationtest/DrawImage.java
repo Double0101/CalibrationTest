@@ -88,6 +88,11 @@ public class DrawImage extends ImageView {
     }
 
     @Override
+    public void setOnLongClickListener(@Nullable OnLongClickListener l) {
+        super.setOnLongClickListener(l);
+    }
+
+    @Override
     public boolean onTouchEvent(final MotionEvent event) {
         int action = event.getAction();
         switch (action) {

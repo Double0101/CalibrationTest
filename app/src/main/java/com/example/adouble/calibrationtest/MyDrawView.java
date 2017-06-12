@@ -21,7 +21,7 @@ public class MyDrawView extends FrameLayout {
 
     private ImageView imageView;
 
-    private DrawImage drawImage;
+    private DrawSurface drawImage;
 
     private float height;
 
@@ -36,7 +36,7 @@ public class MyDrawView extends FrameLayout {
         LayoutInflater.from(context).inflate(R.layout.my_draw_view, this);
 
         imageView = (ImageView) findViewById(R.id.myImageView);
-        drawImage = (DrawImage) findViewById(R.id.myDrawImage);
+        drawImage = (DrawSurface) findViewById(R.id.myDrawImage);
     }
 
     public void setImageBitmap(Bitmap bitmap) {
@@ -56,7 +56,7 @@ public class MyDrawView extends FrameLayout {
             width = imageView.getWidth();
             left = imageView.getLeft();
             top = imageView.getTop();
-            drawImage.setHWLT(height, width, left, top);
+//            drawImage.setHWLT(height, width, left, top);
             Log.i("MyDrawView", String.valueOf(height));
             Log.i("Left&Top", String.valueOf(left) + " " + String.valueOf(top));
             time++;

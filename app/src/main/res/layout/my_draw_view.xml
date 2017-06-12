@@ -8,7 +8,7 @@
         android:adjustViewBounds="true"
         android:layout_height="match_parent" />
 
-    <com.example.adouble.calibrationtest.DrawImage
+    <com.example.adouble.calibrationtest.DrawSurface
         android:id="@+id/myDrawImage"
         android:layout_width="match_parent"
         android:adjustViewBounds="true"

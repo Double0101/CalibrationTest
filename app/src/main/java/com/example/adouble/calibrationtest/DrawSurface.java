@@ -3,6 +3,7 @@ package com.example.adouble.calibrationtest;
 import android.app.Service;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
@@ -58,6 +59,10 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     public DrawSurface(Context context, AttributeSet attrs) {
         super(context, attrs);
+        setWillNotDraw(false);
+        setZOrderOnTop(true);
+        points = new float[4];
+        rects = new ArrayList<float[]>();
         holder = getHolder();
         holder.setFormat(PixelFormat.TRANSPARENT);
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -191,8 +196,23 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     @Override
-    public void surfaceCreated(SurfaceHolder holder) {
+    public void surfaceCreated(final SurfaceHolder holder) {
+        new Thread(new DrawThread()).start();
+    }
 
+    class DrawThread implements Runnable {
+
+        @Override
+        public void run() {
+            Canvas canvas = holder.lockCanvas();
+            drawMyView(canvas);
+            holder.unlockCanvasAndPost(canvas);
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -203,5 +223,42 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
 
+    }
+
+    public float[] getPoints() {
+        points = new float[rects.size() * 4];
+        for (int i = 0; i < rects.size(); i++) {
+            points[4 * i] = (rects.get(i))[0];
+            points[4 * i + 1] = (rects.get(i))[1];
+            points[4 * i + 2] = (rects.get(i))[2];
+            points[4 * i + 3] = (rects.get(i))[3];
+        }
+
+        return points;
+    }
+
+    public void setPoints(float[] points) {
+        this.points = points;
+        rects = new ArrayList<float[]>();
+        for (int i = 0; i < (points.length + 1) / 4; i++) {
+            rects.add(new float[]{points[4 * i], points[4 * i + 1],
+                    points[4 * i + 2], points[4 * i + 3]});
+        }
+    }
+
+    public void drawMyView(Canvas canvas) {
+        if (rects != null) {
+            if (rects.size() > 0) {
+                for (int i = 0; i < rects.size(); i++) {
+                    float[] po = rects.get(i);
+                    canvas.drawRect(po[0], po[1], po[2], po[3], mPaint);
+                }
+                if (index != -1) {
+                    float[] p = rects.get(index);
+                    canvas.drawRect(p[0], p[1], p[2], p[3], cPaint);
+                }
+                canvas.restore();
+            }
+        }
     }
 }
