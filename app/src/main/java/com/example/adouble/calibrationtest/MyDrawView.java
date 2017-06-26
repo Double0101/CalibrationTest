@@ -10,12 +10,13 @@ import android.view.LayoutInflater;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 /**
  * Created by Double on 2017/5/13.
  */
 
-public class MyDrawView extends FrameLayout {
+public class MyDrawView extends RelativeLayout {
 
     private int time = 0;
 

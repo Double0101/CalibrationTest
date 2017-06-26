@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent" android:layout_height="match_parent">
 
     <ImageView
         android:id="@+id/myImageView"
         android:layout_width="match_parent"
         android:adjustViewBounds="true"
+        android:layout_centerInParent="true"
         android:layout_height="match_parent" />
 
     <com.example.adouble.calibrationtest.DrawSurface
         android:id="@+id/myDrawImage"
         android:layout_width="match_parent"
+        android:layout_alignLeft="@id/myImageView"
+        android:layout_alignRight="@id/myImageView"
+        android:layout_alignBottom="@id/myImageView"
+        android:layout_alignTop="@id/myImageView"
         android:adjustViewBounds="true"
         android:layout_height="match_parent" />
 
-</FrameLayout>
+</RelativeLayout>
