@@ -191,7 +191,7 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public void surfaceCreated(final SurfaceHolder holder) {
         RUNNING = true;
-        new Thread(new DrawThread()).start();
+//        new Thread(new DrawThread()).start();
     }
 
     class DrawThread implements Runnable {
@@ -239,6 +239,12 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
             rects.add(new float[]{points[4 * i], points[4 * i + 1],
                     points[4 * i + 2], points[4 * i + 3]});
         }
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
+        drawMyView(canvas);
     }
 
     public void drawMyView(Canvas canvas) {
