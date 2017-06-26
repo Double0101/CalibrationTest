@@ -19,8 +19,6 @@ public class CalibrationActivity extends AppCompatActivity {
 
     private MyDrawView myDrawView;
 
-    private Bitmap bitmap;
-
     int index;
 
     @Override
@@ -30,13 +28,8 @@ public class CalibrationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_calibration);
         myDrawView = (MyDrawView) findViewById(R.id.calibrationView);
         Intent intent = getIntent();
-        final String path = intent.getStringExtra("photo_path");
         index = intent.getIntExtra("index", 0);
-        bitmap = BitmapFactory.decodeFile(path);
-        myDrawView.setImageBitmap(bitmap);
-        if (intent.getFloatArrayExtra("points") != null) {
-            myDrawView.setPoints(intent.getFloatArrayExtra("points"));
-        }
+        myDrawView.setIndex(index);
     }
 
     public void touchFinish(View view) {

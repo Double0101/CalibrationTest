@@ -39,10 +39,7 @@ public class MainActivity extends AppCompatActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Calibration c = (Calibration) adapter.getItem(position);
                 Intent intent = new Intent(MainActivity.this, CalibrationActivity.class);
-                intent.putExtra("photo_path", c.getPhotoPath());
-                intent.putExtra("points", c.getAreaArray());
                 intent.putExtra("index", position);
                 startActivityForResult(intent, 2);
             }
