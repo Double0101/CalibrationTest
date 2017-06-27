@@ -38,13 +38,13 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     private float[] points;
 
-    private float height;
+    private float aW;
 
-    private float width;
+    private float aH;
 
-    private float left;
+    private float bW;
 
-    private float top;
+    private float bH;
 
     private Paint mPaint;
 
@@ -59,6 +59,8 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
     private float selectX;
 
     private float selectY;
+
+    private int pass = 0;
 
     private Handler mHandle;
 
@@ -94,14 +96,16 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getAction();
+
         switch (action) {
             case MotionEvent.ACTION_DOWN:
-                if (!isLongTouched) {
+                if (!isLongTouched && isInArea(event.getX(), event.getY())) {
                     rects.add(new float[]{
                             event.getX(), event.getY(), 0, 0
                     });
                     selectX = event.getX();
                     selectY = event.getY();
+                    pass = 1;
                     isLongTouched = false;
                     startClickTime = Calendar.getInstance().getTimeInMillis();
                     index = rects.size() - 1;
@@ -110,82 +114,97 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
                 break;
 
             case MotionEvent.ACTION_MOVE:
-                if (Math.abs(rects.get(rects.size() - 1)[0] - event.getX()) > 10
-                        || Math.abs(rects.get(rects.size() - 1)[1] - event.getY()) > 10) {
-                    isLongTouched = false;
-                    mHandle.removeCallbacksAndMessages(null);
-                    if (event.getX() > width)
-                        rects.get(index)[2] = width;
-                    else
-                        (rects.get(index))[2] = event.getX();
-                    if (event.getY() > height)
-                        rects.get(index)[3] = height;
-                    else
-                        (rects.get(index))[3] = event.getY();
-                } else {
-                    long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
-                    if (clickDuration > MIN_CLICK_DURATION) {
-                        isLongTouched = true;
-                    } else {
+                if (pass == 1) {
+                    if (Math.abs(rects.get(rects.size() - 1)[0] - event.getX()) > 10
+                            || Math.abs(rects.get(rects.size() - 1)[1] - event.getY()) > 10) {
                         isLongTouched = false;
-                    }
-                }
-
-                if (isLongTouched) {
-                    Vibrator vib = (Vibrator) getContext().getSystemService(Service.VIBRATOR_SERVICE);
-                    vib.vibrate(200);
-                    for (int i = 0; i < rects.size(); i++) {
-                        if (rects.get(i)[0] < selectX
-                                && rects.get(i)[2] > selectX
-                                && rects.get(i)[1] < selectY
-                                && rects.get(i)[3] > selectY) {
-                            selectInt = i;
+                        mHandle.removeCallbacksAndMessages(null);
+                        Log.i("Move", "X" + event.getX() + "bX" + bW);
+                        Log.i("Move", "Y" + event.getY() + "bY" + bH);
+                        if (event.getX() > bW) {
+                            rects.get(index)[2] = bW;
+                            Log.i("Move", 1 + "");
+                        }
+                        else
+                            (rects.get(index))[2] = event.getX();
+                        if (event.getY() > bH) {
+                            rects.get(index)[3] = bH;
+                            Log.i("Move", 2 + "");
+                        }
+                        else
+                            (rects.get(index))[3] = event.getY();
+                    } else {
+                        long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
+                        if (clickDuration > MIN_CLICK_DURATION) {
+                            isLongTouched = true;
+                        } else {
+                            isLongTouched = false;
                         }
                     }
 
-                    if (selectInt != -1) {
-                        new AlertDialog.Builder(getContext())
-                                .setTitle("删除该标定区域")
-                                .setMessage("您确定要删除该标定吗？")
-                                .setPositiveButton("是", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        rects.remove(selectInt);
-                                        selectInt = -1;
-                                        dialog.cancel();
-                                        invalidate();
-                                        isLongTouched = false;
-                                    }
-                                }).setNegativeButton("否", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                                isLongTouched = false;
+                    if (isLongTouched) {
+                        Log.d("ahsjdahskjdhaksjd", "执行了这个语句第nnn次");
+                        Vibrator vib = (Vibrator) getContext().getSystemService(Service.VIBRATOR_SERVICE);
+                        vib.vibrate(200);
+                        for (int i = 0; i < rects.size(); i++) {
+                            if (rects.get(i)[0] < selectX
+                                    && rects.get(i)[2] > selectX
+                                    && rects.get(i)[1] < selectY
+                                    && rects.get(i)[3] > selectY) {
+                                selectInt = i;
                             }
-                        }).show();
-                    } else {
-                        Toast.makeText(getContext(), "您未选任何标注区域", Toast.LENGTH_SHORT).show();
-                        isLongTouched = false;
-                    }
-                } else {
-                    rects.get(index)[2] = event.getX();
-                    rects.get(index)[3] = event.getY();
+                        }
+
+                        if (selectInt != -1) {
+                            new AlertDialog.Builder(getContext())
+                                    .setTitle("删除该标定区域")
+                                    .setMessage("您确定要删除该标定吗？")
+                                    .setPositiveButton("是", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            rects.remove(selectInt);
+                                            selectInt = -1;
+                                            dialog.cancel();
+                                            invalidate();
+                                            isLongTouched = false;
+                                        }
+                                    }).setNegativeButton("否", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+                                    isLongTouched = false;
+                                }
+                            }).show();
+                        } else {
+                            Toast.makeText(getContext(), "您未选任何标注区域", Toast.LENGTH_SHORT).show();
+                            isLongTouched = false;
+                        }
+                    } 
+                    invalidate();
                 }
-                invalidate();
                 break;
 
             case MotionEvent.ACTION_UP:
-                if (rects.get(rects.size() - 1)[2] == 0
-                        || rects.get(rects.size() - 1)[3] == 0
-                        || rects.get(rects.size() - 1)[2] - rects.get(rects.size() - 1)[0] < 10
-                        || rects.get(rects.size() - 1)[3] - rects.get(rects.size() - 1)[1] < 10) {
-                    rects.remove(rects.size() - 1);
+                if (pass == 1) {
+                    if (rects.get(rects.size() - 1)[2] == 0
+                            || rects.get(rects.size() - 1)[3] == 0
+                            || rects.get(rects.size() - 1)[2] - rects.get(rects.size() - 1)[0] < 10
+                            || rects.get(rects.size() - 1)[3] - rects.get(rects.size() - 1)[1] < 10) {
+                        rects.remove(rects.size() - 1);
+                    }
                 }
+                pass = 0;
                 index = -1;
                 isLongTouched = false;
                 break;
         }
         return true;
+    }
+
+    private boolean isInArea(float x, float y) {
+        if (x > aW && x < bW && y > aH && y < bH)
+            return true;
+        return false;
     }
 
     @Override
@@ -223,10 +242,10 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
     public float[] getPoints() {
         points = new float[rects.size() * 4];
         for (int i = 0; i < rects.size(); i++) {
-            points[4 * i] = (rects.get(i))[0];
-            points[4 * i + 1] = (rects.get(i))[1];
-            points[4 * i + 2] = (rects.get(i))[2];
-            points[4 * i + 3] = (rects.get(i))[3];
+            points[4 * i] = (rects.get(i))[0] - aW;
+            points[4 * i + 1] = (rects.get(i))[1] - aH;
+            points[4 * i + 2] = (rects.get(i))[2] - aW;
+            points[4 * i + 3] = (rects.get(i))[3] - aH;
         }
 
         return points;
@@ -236,8 +255,8 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
         this.points = points;
         rects = new ArrayList<float[]>();
         for (int i = 0; i < (points.length + 1) / 4; i++) {
-            rects.add(new float[]{points[4 * i], points[4 * i + 1],
-                    points[4 * i + 2], points[4 * i + 3]});
+            rects.add(new float[]{points[4 * i] + aW, points[4 * i + 1] + aH,
+                    points[4 * i + 2] + aW, points[4 * i + 3] + aH});
         }
     }
 
@@ -264,5 +283,12 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
                 canvas.restore();
             }
         }
+    }
+
+    public void setWH(float bdW, float bdH, float lW, float lH) {
+        aW = bdW;
+        aH = bdH;
+        bW = lW;
+        bH = lH;
     }
 }
