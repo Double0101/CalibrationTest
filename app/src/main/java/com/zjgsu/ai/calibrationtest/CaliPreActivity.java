@@ -1,4 +1,4 @@
-package com.example.adouble.calibrationtest;
+package com.zjgsu.ai.calibrationtest;
 
 import android.content.ContentResolver;
 import android.content.Intent;
@@ -10,8 +10,6 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;

@@ -1,4 +1,4 @@
-package com.example.adouble.calibrationtest;
+package com.zjgsu.ai.calibrationtest;
 
 import android.content.Context;
 import android.util.Log;

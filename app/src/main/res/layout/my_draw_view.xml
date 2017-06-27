@@ -7,7 +7,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <com.example.adouble.calibrationtest.DrawSurface
+    <com.zjgsu.ai.calibrationtest.DrawSurface
         android:id="@+id/myDrawImage"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />

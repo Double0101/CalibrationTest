@@ -1,4 +1,4 @@
-package com.example.adouble.calibrationtest;
+package com.zjgsu.ai.calibrationtest;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -9,8 +9,6 @@ import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
