@@ -179,7 +179,7 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
                             Toast.makeText(getContext(), "您未选任何标注区域", Toast.LENGTH_SHORT).show();
                             isLongTouched = false;
                         }
-                    } 
+                    }
                     invalidate();
                 }
                 break;
