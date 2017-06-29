@@ -28,7 +28,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
-    private static boolean isLongTouched;
+//    private static boolean isLongTouched;
 
     private static boolean RUNNING = false;
 
@@ -56,17 +56,17 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     private int index = -1;
 
-    private int selectInt = -1;
+//    private int selectInt = -1;
 
 //    private long startClickTime = 0;
 
-    private float selectX;
+//    private float selectX;
 
-    private float selectY;
+//    private float selectY;
 
     private int pass = 0;
 
-    private int isFirst = 0;
+//    private int isFirst = 0;
 
     private Handler mHandle;
 
@@ -105,15 +105,15 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
         switch (action) {
             case MotionEvent.ACTION_DOWN:
-                if (!isLongTouched && isInArea(event.getX(), event.getY())) {
+                if (/*!isLongTouched &&*/ isInArea(event.getX(), event.getY())) {
                     rects.add(new float[]{
                             event.getX(), event.getY(), 0, 0
                     });
-                    selectX = event.getX();
-                    selectY = event.getY();
+//                    selectX = event.getX();
+//                    selectY = event.getY();
                     pass = 1;
-                    isFirst = 0;
-                    isLongTouched = false;
+//                    isFirst = 0;
+//                    isLongTouched = false;
 //                    startClickTime = Calendar.getInstance().getTimeInMillis();
                     index = rects.size() - 1;
                     Log.i("SIZE", "" + index);
@@ -125,7 +125,7 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
                 if (pass == 1) {
                     if (Math.abs(rects.get(rects.size() - 1)[0] - event.getX()) > 10
                             || Math.abs(rects.get(rects.size() - 1)[1] - event.getY()) > 10) {
-                        isLongTouched = false;
+//                        isLongTouched = false;
                         mHandle.removeCallbacksAndMessages(null);
                         Log.i("Move", "X" + event.getX() + "bX" + bW);
                         Log.i("Move", "Y" + event.getY() + "bY" + bH);
@@ -211,7 +211,7 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
                 }
                 pass = 0;
                 index = -1;
-                isLongTouched = false;
+//                isLongTouched = false;
                 break;
         }
         return true;
