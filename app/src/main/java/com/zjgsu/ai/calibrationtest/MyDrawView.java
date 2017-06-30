@@ -33,7 +33,7 @@ public class MyDrawView extends RelativeLayout {
         mContext = context;
         imageView = (ImageView) findViewById(R.id.myImageView);
         drawSurface = (DrawSurface) findViewById(R.id.myDrawImage);
-
+        drawSurface.setImageView(imageView);
     }
 
     public void setIndex(int index) {
@@ -45,6 +45,7 @@ public class MyDrawView extends RelativeLayout {
         Bitmap bitmap = BitmapFactory.decodeFile(path);
         imageView.setImageBitmap(bitmap);
         imageView.setAdjustViewBounds(true);
+
     }
 
     private void setPoints() {
