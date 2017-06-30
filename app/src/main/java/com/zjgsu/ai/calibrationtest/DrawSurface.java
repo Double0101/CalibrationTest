@@ -79,6 +79,8 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     private Bitmap bitmap;
 
+    private int t = 0;
+
     private BitmapShader shader;
 
     private Matrix matrix;
@@ -318,10 +320,12 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     private void drawMagnifier(float x, float y, Canvas canvas) {
-        if (!isCached) {
+        if (t == 0) {
+            t = 1;
             imageView.buildDrawingCache();
-        } else {
             bitmap = imageView.getDrawingCache();
+        }
+        if (isCached) {
             shader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
             magnifierPaint.setShader(shader);
             matrix.reset();
