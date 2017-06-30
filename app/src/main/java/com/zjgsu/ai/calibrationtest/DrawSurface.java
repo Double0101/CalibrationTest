@@ -3,10 +3,14 @@ package com.zjgsu.ai.calibrationtest;
 import android.app.Service;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
+import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
+import android.graphics.Shader;
 import android.os.Handler;
 import android.os.Vibrator;
 import android.support.v7.app.AlertDialog;
@@ -15,6 +19,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.SurfaceHolder;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -28,15 +33,15 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
-    private static boolean isLongTouched;
+//    private static boolean isLongTouched;
 
     private static boolean RUNNING = false;
 
     private static final String TAG = "Calibration";
 
-    private static final int MIN_CLICK_DURATION = 2000;
+//    private static final int MIN_CLICK_DURATION = 2000;
 
-    private static Lock lock = new ReentrantLock();
+//    private static Lock lock = new ReentrantLock();
 
     private ArrayList<float[]> rects;
 
@@ -54,21 +59,35 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     private Paint cPaint;
 
+    private Paint magnifierPaint;
+
+    private ImageView imageView;
+
     private int index = -1;
 
-    private int selectInt = -1;
+//    private int selectInt = -1;
 
 //    private long startClickTime = 0;
 
-    private float selectX;
+//    private float selectX;
 
-    private float selectY;
+//    private float selectY;
 
     private int pass = 0;
 
-    private int isFirst = 0;
+    private boolean isCached = false;
 
-    private Handler mHandle;
+    private Bitmap bitmap;
+
+    private BitmapShader shader;
+
+    private Matrix matrix;
+
+    private float pX;
+
+    private float pY;
+
+//    private int isFirst = 0;
 
     private SurfaceHolder holder;
 
@@ -83,10 +102,16 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         holder.addCallback(this);
         initPaint();
-        mHandle = new Handler();
+        matrix = new Matrix();
+
+    }
+
+    public void setImageView(ImageView imageView) {
+        this.imageView = imageView;
     }
 
     private void initPaint() {
+        magnifierPaint = new Paint();
         mPaint = new Paint();
         mPaint.setColor(Color.GREEN);
         mPaint.setStyle(Paint.Style.STROKE);
@@ -102,18 +127,22 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         int action = event.getAction();
-
+        pX = event.getX();
+        pY = event.getY();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
-                if (!isLongTouched && isInArea(event.getX(), event.getY())) {
+                if (/*!isLongTouched &&*/ isInArea(event.getX(), event.getY())) {
                     rects.add(new float[]{
                             event.getX(), event.getY(), 0, 0
                     });
-                    selectX = event.getX();
-                    selectY = event.getY();
+                    pX = event.getX();
+                    pY = event.getY();
+//                    selectX = event.getX();
+//                    selectY = event.getY();
+                    isCached = true;
                     pass = 1;
-                    isFirst = 0;
-                    isLongTouched = false;
+//                    isFirst = 0;
+//                    isLongTouched = false;
 //                    startClickTime = Calendar.getInstance().getTimeInMillis();
                     index = rects.size() - 1;
                     Log.i("SIZE", "" + index);
@@ -125,8 +154,10 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
                 if (pass == 1) {
                     if (Math.abs(rects.get(rects.size() - 1)[0] - event.getX()) > 10
                             || Math.abs(rects.get(rects.size() - 1)[1] - event.getY()) > 10) {
-                        isLongTouched = false;
-                        mHandle.removeCallbacksAndMessages(null);
+//                        isLongTouched = false;
+                        pX = event.getX();
+                        pY = event.getY();
+                        isCached = true;
                         Log.i("Move", "X" + event.getX() + "bX" + bW);
                         Log.i("Move", "Y" + event.getY() + "bY" + bH);
                         Log.i("MMMM1", index + " " + (rects.size() - 1));
@@ -196,7 +227,7 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 //                        }
 //                        lock.unlock();
 //                    }
-//                    invalidate();
+                    invalidate();
                 }
                 break;
 
@@ -209,9 +240,16 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
                         rects.remove(index);
                     }
                 }
+                isCached = false;
                 pass = 0;
                 index = -1;
-                isLongTouched = false;
+//                isLongTouched = false;
+                invalidate();
+                break;
+
+            case MotionEvent.ACTION_CANCEL:
+                isCached = false;
+                invalidate();
                 break;
         }
         return true;
@@ -224,36 +262,13 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     @Override
-    public void surfaceCreated(final SurfaceHolder holder) {
-        RUNNING = true;
-//        new Thread(new DrawThread()).start();
-    }
-
-    class DrawThread implements Runnable {
-
-        @Override
-        public void run() {
-            int SLEEP_TIME = 0;
-            while (RUNNING) {
-                try {
-                    Canvas canvas = holder.lockCanvas();
-                    drawMyView(canvas);
-                    holder.unlockCanvasAndPost(canvas);
-                    Thread.sleep(SLEEP_TIME);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
+    public void surfaceCreated(final SurfaceHolder holder) {}
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        RUNNING = false;
-    }
+    public void surfaceDestroyed(SurfaceHolder holder) {}
 
     public float[] getPoints() {
         points = new float[rects.size() * 4];
@@ -295,11 +310,28 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
                     float[] p = rects.get(index);
                     canvas.drawRect(p[0], p[1], p[2], p[3], cPaint);
                 }
+                drawMagnifier(pX, pY, canvas);
                 canvas.save();
                 canvas.restore();
             }
         }
     }
+
+    private void drawMagnifier(float x, float y, Canvas canvas) {
+        if (!isCached) {
+            imageView.buildDrawingCache();
+        } else {
+            bitmap = imageView.getDrawingCache();
+            shader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+            magnifierPaint.setShader(shader);
+            Log.i("MMMMMAAAA", 1+ "");
+            matrix.reset();
+            matrix.postScale(2f, 2f, x, y);
+            magnifierPaint.getShader().setLocalMatrix(matrix);
+            canvas.drawCircle(x, y - 200, 200, magnifierPaint);
+        }
+    }
+
 
     public void setWH(float bdW, float bdH, float lW, float lH) {
         aW = bdW;
