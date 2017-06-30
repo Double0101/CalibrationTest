@@ -142,7 +142,7 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
                     pY = event.getY();
 //                    selectX = event.getX();
 //                    selectY = event.getY();
-                    isCached = true;
+                    isCached = false;
                     pass = 1;
 //                    isFirst = 0;
 //                    isLongTouched = false;
