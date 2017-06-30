@@ -324,11 +324,10 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
             bitmap = imageView.getDrawingCache();
             shader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
             magnifierPaint.setShader(shader);
-            Log.i("MMMMMAAAA", 1+ "");
             matrix.reset();
             matrix.postScale(2f, 2f, x, y);
             magnifierPaint.getShader().setLocalMatrix(matrix);
-            canvas.drawCircle(x, y - 200, 200, magnifierPaint);
+            canvas.drawCircle(x, y - 300, 200, magnifierPaint);
         }
     }
 
