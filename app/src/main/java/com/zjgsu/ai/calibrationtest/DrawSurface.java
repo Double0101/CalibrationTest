@@ -61,6 +61,8 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     private Paint magnifierPaint;
 
+    private int magnifierRadius;
+
     private ImageView imageView;
 
     private int index = -1;
@@ -85,6 +87,8 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     private Matrix matrix;
 
+    private float multiple;
+
     private float pX;
 
     private float pY;
@@ -104,6 +108,8 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         holder.addCallback(this);
         initPaint();
+        multiple = 2f;
+        magnifierRadius = 300;
         matrix = new Matrix();
 
     }
@@ -293,6 +299,10 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
+    public void setMultiple(float multiple) {
+        this.multiple = multiple;
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -329,9 +339,9 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
             shader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
             magnifierPaint.setShader(shader);
             matrix.reset();
-            matrix.postScale(2f, 2f, x, y);
+            matrix.postScale(multiple, multiple, x, y + magnifierRadius / (multiple - 1));
             magnifierPaint.getShader().setLocalMatrix(matrix);
-            canvas.drawCircle(x, y - 300, 200, magnifierPaint);
+            canvas.drawCircle(x, y - magnifierRadius, 200, magnifierPaint);
         }
     }
 
