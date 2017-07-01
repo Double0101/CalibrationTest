@@ -61,6 +61,8 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     private Paint magnifierPaint;
 
+    private int magnifierRadius;
+
     private ImageView imageView;
 
     private int index = -1;
@@ -82,9 +84,13 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     private Bitmap bitmap;
 
+    private int t = 0;
+
     private BitmapShader shader;
 
     private Matrix matrix;
+
+    private float multiple;
 
     private float pX;
 
@@ -105,6 +111,8 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         holder.addCallback(this);
         initPaint();
+        multiple = 2f;
+        magnifierRadius = 300;
         matrix = new Matrix();
 
     }
@@ -294,6 +302,10 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
         }
     }
 
+    public void setMultiple(float multiple) {
+        this.multiple = multiple;
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
@@ -321,16 +333,18 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     private void drawMagnifier(float x, float y, Canvas canvas) {
-        if (!isCached) {
+        if (t == 0) {
+            t = 1;
             imageView.buildDrawingCache();
-        } else {
             bitmap = imageView.getDrawingCache();
+        }
+        if (isCached) {
             shader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
             magnifierPaint.setShader(shader);
             matrix.reset();
-            matrix.postScale(2f, 2f, x, y);
+            matrix.postScale(multiple, multiple, x, y + magnifierRadius / (multiple - 1));
             magnifierPaint.getShader().setLocalMatrix(matrix);
-            canvas.drawCircle(x, y, 200, magnifierPaint);
+            canvas.drawCircle(x, y - magnifierRadius, 200, magnifierPaint);
         }
     }
 
