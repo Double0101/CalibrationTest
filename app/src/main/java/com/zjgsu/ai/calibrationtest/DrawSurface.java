@@ -341,7 +341,7 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
             matrix.reset();
             matrix.postScale(multiple, multiple, x, y + magnifierRadius / (multiple - 1));
             magnifierPaint.getShader().setLocalMatrix(matrix);
-            canvas.drawCircle(x, y - magnifierRadius, 200, magnifierPaint);
+            canvas.drawCircle(x, y - magnifierRadius, magnifierRadius, magnifierPaint);
         }
     }
 
