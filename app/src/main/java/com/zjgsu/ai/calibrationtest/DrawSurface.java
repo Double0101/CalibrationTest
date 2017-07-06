@@ -314,7 +314,8 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     public void drawMyView(Canvas canvas) {
         if (rects != null) {
-            if (rects.size() > 0) {
+            Log.i("oiwhgoiwg", rects.size()+"");
+
                 for (int i = 0; i < rects.size(); i++) {
                     float[] po = rects.get(i);
                     canvas.drawRect(po[0], po[1], po[2], po[3], mPaint);
@@ -325,9 +326,10 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
                     float[] p = rects.get(index);
                     canvas.drawRect(p[0], p[1], p[2], p[3], cPaint);
                 }
+                if (rects.size() > 0) {
                 drawMagnifier(pX, pY, canvas);
-                canvas.save();
-                canvas.restore();
+//                canvas.save();
+//                canvas.restore();
             }
         }
     }
@@ -337,8 +339,10 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
             t = 1;
             imageView.buildDrawingCache();
             bitmap = imageView.getDrawingCache();
+            Log.i("lfhwoighroiw", bitmap.getWidth() + " " + bitmap.getHeight());
         }
         if (isCached) {
+            Log.i("lfhwoighroiw", "isexecute");
             shader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
             magnifierPaint.setShader(shader);
             matrix.reset();
