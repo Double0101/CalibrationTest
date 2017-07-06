@@ -7,8 +7,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.DashPathEffect;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.PathEffect;
 import android.graphics.PixelFormat;
 import android.graphics.Shader;
 import android.os.Handler;
@@ -60,6 +62,10 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
     private Paint cPaint;
 
     private Paint magnifierPaint;
+
+    private Paint pPaint;
+
+    private Paint linePaint;
 
     private int magnifierRadius;
 
@@ -133,6 +139,16 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
         cPaint.setStyle(Paint.Style.STROKE);
         cPaint.setStrokeWidth(8f);
         cPaint.setAlpha(200);
+        pPaint = new Paint();
+        pPaint.setColor(Color.RED);
+        pPaint.setStrokeWidth(10f);
+        linePaint = new Paint();
+        linePaint.setColor(Color.BLACK);
+        linePaint.setStyle(Paint.Style.STROKE);
+        linePaint.setStrokeWidth(4f);
+        PathEffect effect = new DashPathEffect(new float[]{ 1, 2, 4, 8}, 1);
+        linePaint.setAntiAlias(true);
+        linePaint.setPathEffect(effect);
     }
 
     @Override
@@ -175,16 +191,14 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
                         if (event.getX() > bW) {
                             rects.get(index)[2] = bW;
                             Log.i("Move", 1 + "");
-                        }
-                        else {
+                        } else {
                             Log.i("MMMM1", index + " " + (rects.size() - 1));
                             (rects.get(index))[2] = event.getX();
                         }
                         if (event.getY() > bH) {
                             rects.get(index)[3] = bH;
                             Log.i("Move", 2 + "");
-                        }
-                        else
+                        } else
                             (rects.get(index))[3] = event.getY();
                     } else {
 //                        long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
@@ -273,13 +287,16 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     @Override
-    public void surfaceCreated(final SurfaceHolder holder) {}
+    public void surfaceCreated(final SurfaceHolder holder) {
+    }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    }
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {}
+    public void surfaceDestroyed(SurfaceHolder holder) {
+    }
 
     public float[] getPoints() {
         points = new float[rects.size() * 4];
@@ -314,22 +331,19 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     public void drawMyView(Canvas canvas) {
         if (rects != null) {
-            Log.i("oiwhgoiwg", rects.size()+"");
+            for (int i = 0; i < rects.size(); i++) {
+                float[] po = rects.get(i);
+                canvas.drawRect(po[0], po[1], po[2], po[3], mPaint);
 
-                for (int i = 0; i < rects.size(); i++) {
-                    float[] po = rects.get(i);
-                    canvas.drawRect(po[0], po[1], po[2], po[3], mPaint);
+                Log.i(TAG, po[0] + " " + po[1] + " " + po[2] + " " + po[3]);
+            }
+            if (index != -1) {
+                float[] p = rects.get(index);
+                canvas.drawRect(p[0], p[1], p[2], p[3], cPaint);
+            }
 
-                    Log.i(TAG, po[0] + " " + po[1] + " " + po[2] + " " + po[3]);
-                }
-                if (index != -1) {
-                    float[] p = rects.get(index);
-                    canvas.drawRect(p[0], p[1], p[2], p[3], cPaint);
-                }
-                if (rects.size() > 0) {
+            if (rects.size() > 0) {
                 drawMagnifier(pX, pY, canvas);
-//                canvas.save();
-//                canvas.restore();
             }
         }
     }
@@ -349,6 +363,9 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
             matrix.postScale(multiple, multiple, x, y + magnifierRadius / (multiple - 1));
             magnifierPaint.getShader().setLocalMatrix(matrix);
             canvas.drawCircle(x, y - magnifierRadius, magnifierRadius, magnifierPaint);
+            canvas.drawLine(x - magnifierRadius, y - magnifierRadius, x + magnifierRadius, y - magnifierRadius, linePaint);
+            canvas.drawLine(x, y - 2 * magnifierRadius, x, y, linePaint);
+            canvas.drawPoint(x, y - magnifierRadius, pPaint);
         }
     }
 
