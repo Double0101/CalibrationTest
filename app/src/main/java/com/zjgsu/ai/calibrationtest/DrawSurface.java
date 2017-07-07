@@ -37,9 +37,7 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     private static boolean isLongTouched;
 
-    private static boolean RUNNING = false;
-
-    private static final String TAG = "Calibration";
+    private static final String TAG = "Calibration-Click";
 
     private static final int MIN_CLICK_DURATION = 2000;
 
@@ -193,10 +191,10 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
                         long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
                         if (clickDuration >= MIN_CLICK_DURATION) {
                             isLongTouched = true;
-                            Log.i("fsferwgvf", "long");
+                            Log.i(TAG, "long");
                         } else {
                             isLongTouched = false;
-                            Log.i("fsferwgvf", "short");
+                            Log.i(TAG, "short");
                         }
 
                         if (isLongTouched) {
@@ -349,7 +347,11 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
             shader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
             magnifierPaint.setShader(shader);
             matrix.reset();
-            matrix.postScale(multiple, multiple, x, y + magnifierRadius / (multiple - 1));
+            if (multiple == 1)
+                matrix.postTranslate(0, -magnifierRadius);
+            else {
+                matrix.postScale(multiple, multiple, x, y + magnifierRadius / (multiple - 1));
+            }
             magnifierPaint.getShader().setLocalMatrix(matrix);
             canvas.drawCircle(x, y - magnifierRadius, magnifierRadius, magnifierPaint);
             canvas.drawLine(x - magnifierRadius, y - magnifierRadius, x + magnifierRadius, y - magnifierRadius, linePaint);

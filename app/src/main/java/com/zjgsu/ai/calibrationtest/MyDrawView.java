@@ -93,6 +93,10 @@ public class MyDrawView extends RelativeLayout {
         Log.i("MyScale", "w=" + cw + "h=" + ch);
     }
 
+    public void setMultiple(int i) {
+        drawSurface.setMultiple(i);
+    }
+
     public float[] getPoints() {
         return drawSurface.getPoints();
     }
