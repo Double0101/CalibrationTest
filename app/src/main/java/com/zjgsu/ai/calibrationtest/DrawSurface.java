@@ -33,7 +33,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * Created by Double on 10/06/2017.
  */
 
-public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
+public class DrawSurface extends SurfaceView {
 
     private static boolean isLongTouched;
 
@@ -108,7 +108,6 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
         holder = getHolder();
         holder.setFormat(PixelFormat.TRANSPARENT);
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        holder.addCallback(this);
         initPaint();
         multiple = 2f;
         magnifierRadius = 250;
@@ -173,9 +172,63 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
                     if (Math.abs(rects.get(rects.size() - 1)[0] - event.getX()) > 10
                             || Math.abs(rects.get(rects.size() - 1)[1] - event.getY()) > 10) {
                         isLongTouched = false;
+                    } else {
+                        long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
+                        if (clickDuration >= MIN_CLICK_DURATION) {
+                            isLongTouched = true;
+                            Log.i(TAG, "long");
+                        } else {
+                            isLongTouched = false;
+                            Log.i(TAG, "short");
+                        }
+                    }
+
+                    if (isLongTouched) {
+                        if (isFirst == 0) {
+                            isFirst = 1;
+                            Log.d("fsferwgvf", "执行了这个语句第nnn次");
+                            Vibrator vib = (Vibrator) getContext().getSystemService(Service.VIBRATOR_SERVICE);
+                            vib.vibrate(200);
+                            for (int i = 0; i < rects.size(); i++) {
+                                if (rects.get(i)[0] < selectX
+                                        && rects.get(i)[2] > selectX
+                                        && rects.get(i)[1] < selectY
+                                        && rects.get(i)[3] > selectY) {
+                                    selectInt = i;
+                                }
+                            }
+
+                            if (selectInt != -1) {
+                                new AlertDialog.Builder(getContext())
+                                        .setTitle("删除该标定区域")
+                                        .setMessage("您确定要删除该标定吗？")
+                                        .setPositiveButton("是", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                rects.remove(selectInt);
+                                                selectInt = -1;
+                                                dialog.cancel();
+                                                invalidate();
+                                                isLongTouched = false;
+                                            }
+                                        }).setNegativeButton("否", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.cancel();
+                                        isLongTouched = false;
+                                    }
+                                }).show();
+                            } else {
+                                Toast.makeText(getContext(), "您未选任何标注区域", Toast.LENGTH_SHORT).show();
+                                isLongTouched = false;
+                            }
+                        }
+                    } else {
                         pX = event.getX();
                         pY = event.getY();
                         isCached = true;
+                        Log.i(TAG, "rects.size() = " + rects.size());
+                        Log.i(TAG, "index = " + index);
                         if (event.getX() > bW) {
                             rects.get(index)[2] = bW;
                         } else {
@@ -186,59 +239,6 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
                         } else
                             (rects.get(index))[3] = event.getY();
                         invalidate();
-                    } else {
-
-                        long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
-                        if (clickDuration >= MIN_CLICK_DURATION) {
-                            isLongTouched = true;
-                            Log.i(TAG, "long");
-                        } else {
-                            isLongTouched = false;
-                            Log.i(TAG, "short");
-                        }
-
-                        if (isLongTouched) {
-                            if (isFirst == 0) {
-                                isFirst = 1;
-                                Log.d("fsferwgvf", "执行了这个语句第nnn次");
-                                Vibrator vib = (Vibrator) getContext().getSystemService(Service.VIBRATOR_SERVICE);
-                                vib.vibrate(200);
-                                for (int i = 0; i < rects.size(); i++) {
-                                    if (rects.get(i)[0] < selectX
-                                            && rects.get(i)[2] > selectX
-                                            && rects.get(i)[1] < selectY
-                                            && rects.get(i)[3] > selectY) {
-                                        selectInt = i;
-                                    }
-                                }
-
-                                if (selectInt != -1) {
-                                    new AlertDialog.Builder(getContext())
-                                            .setTitle("删除该标定区域")
-                                            .setMessage("您确定要删除该标定吗？")
-                                            .setPositiveButton("是", new DialogInterface.OnClickListener() {
-                                                @Override
-                                                public void onClick(DialogInterface dialog, int which) {
-                                                    rects.remove(selectInt);
-                                                    selectInt = -1;
-                                                    dialog.cancel();
-                                                    invalidate();
-                                                    isLongTouched = false;
-                                                }
-                                            }).setNegativeButton("否", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            dialog.cancel();
-                                            isLongTouched = false;
-                                        }
-                                    }).show();
-                                } else {
-                                    Toast.makeText(getContext(), "您未选任何标注区域", Toast.LENGTH_SHORT).show();
-                                    isLongTouched = false;
-                                }
-                            }
-                        }
-
                     }
                 }
                 break;
@@ -272,18 +272,6 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
         if (x > aW && x < bW && y > aH && y < bH)
             return true;
         return false;
-    }
-
-    @Override
-    public void surfaceCreated(final SurfaceHolder holder) {
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
     }
 
     public float[] getPoints() {
