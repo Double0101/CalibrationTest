@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.RectF;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -49,8 +50,8 @@ public class MyDrawView extends RelativeLayout {
     }
 
     private void setPoints() {
-        if (mCalibration.getAreaArray() != null) {
-            drawSurface.setPoints(mCalibration.getAreaArray());
+        if (mCalibration.getAreaRects() != null) {
+            drawSurface.setRects(mCalibration.getAreaRects());
         }
     }
 
@@ -97,7 +98,7 @@ public class MyDrawView extends RelativeLayout {
         drawSurface.setMultiple(i);
     }
 
-    public float[] getPoints() {
-        return drawSurface.getPoints();
+    public RectF[] getRects() {
+        return drawSurface.getRects();
     }
 }

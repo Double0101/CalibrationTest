@@ -1,5 +1,7 @@
 package com.zjgsu.ai.calibrationtest;
 
+import android.graphics.RectF;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -10,14 +12,12 @@ import org.json.JSONObject;
 public class Calibration {
 
     private static final String JSON_CATEGORY = "category";
-    private static final String JSON_SHAPE = "shape";
     private static final String JSON_AREA = "area";
     private static final String JSON_PHOTO = "path";
 
     private static int count = 0;
 
     private String category;
-    private Shape mShape;
     private Area mArea;
     private Photo src;
 
@@ -33,8 +33,6 @@ public class Calibration {
     public Calibration(JSONObject json) throws JSONException {
         category = json.getString(JSON_CATEGORY);
         src = new Photo(json.getJSONObject(JSON_PHOTO));
-        if (json.has(JSON_SHAPE))
-            mShape = new Shape(json.getJSONObject(JSON_SHAPE));
         if (json.has(JSON_AREA))
             mArea = new Area(json.getJSONObject(JSON_AREA));
     }
@@ -45,9 +43,6 @@ public class Calibration {
         json.put(JSON_PHOTO, src.toJSON());
         if (mArea != null)
             json.put(JSON_AREA, mArea.toJSON());
-        if (mShape != null)
-            json.put(JSON_SHAPE, mShape);
-
         return json;
     }
 
@@ -67,9 +62,9 @@ public class Calibration {
         return mArea;
     }
 
-    public float[] getAreaArray() {
+    public RectF[] getAreaRects() {
         if (mArea != null) {
-            return mArea.getArray();
+            return mArea.getRects();
         } else
             return null;
     }

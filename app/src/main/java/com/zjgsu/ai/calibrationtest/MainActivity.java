@@ -73,32 +73,11 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             case R.id.menu_add_button:
                 Intent intent = new Intent(MainActivity.this, CaliPreActivity.class);
-                startActivityForResult(intent, 1);
+                startActivity(intent);
 
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK) {
-            if (requestCode == 1) {
-                Bundle bundle = data.getBundleExtra("bundle1");
-                Log.i(TAG, bundle.getString("category"));
-                Log.i(TAG, bundle.getString("path"));
-                Calibration calibration = new Calibration(bundle.getString("category"), bundle.getString("path"));
-                Log.i(TAG, calibration.toString());
-                CalibrationLab.get(this).addCalibration(calibration);
-                Log.i(TAG, Integer.toString(mCalibrations.size()));
-            }
-            else if (requestCode == 2) {
-                Bundle bundle = data.getBundleExtra("bundle2");
-                mCalibrations.get(bundle.getInt("index")).setArea(new Area(
-                        bundle.getFloatArray("points")));
-            }
-        }
-        super.onActivityResult(requestCode, resultCode, data);
     }
 }

@@ -39,11 +39,9 @@ public class DrawSurface extends SurfaceView {
 
     private static final int MIN_CLICK_DURATION = 2000;
 
-    private ArrayList<float[]> rects;
+    private ArrayList<RectF> rects;
 
     private RectF newRect;
-
-    private float[] points;
 
     private float aW;
 
@@ -99,8 +97,7 @@ public class DrawSurface extends SurfaceView {
         super(context, attrs);
         setWillNotDraw(false);
         setZOrderOnTop(true);
-        points = new float[4];
-        rects = new ArrayList<float[]>();
+        rects = new ArrayList<RectF>();
         holder = getHolder();
         holder.setFormat(PixelFormat.TRANSPARENT);
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -108,7 +105,6 @@ public class DrawSurface extends SurfaceView {
         multiple = 2f;
         magnifierRadius = 250;
         matrix = new Matrix();
-        newRect = new RectF();
     }
 
     public void setImageView(ImageView imageView) {
@@ -147,6 +143,7 @@ public class DrawSurface extends SurfaceView {
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 if (!isLongTouched && isInArea(event.getX(), event.getY())) {
+                    newRect = new RectF();
                     pX = event.getX();
                     pY = event.getY();
                     selectX = event.getX();
@@ -158,17 +155,15 @@ public class DrawSurface extends SurfaceView {
                 break;
 
             case MotionEvent.ACTION_MOVE:
-                if (Math.abs(rects.get(rects.size() - 1)[0] - event.getX()) > 10
-                        || Math.abs(rects.get(rects.size() - 1)[1] - event.getY()) > 10) {
+                if (Math.abs(newRect.left - event.getX()) > 20
+                        || Math.abs(newRect.top - event.getY()) > 20) {
                     isLongTouched = false;
                 } else {
                     long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
                     if (clickDuration >= MIN_CLICK_DURATION) {
                         isLongTouched = true;
-                        Log.i(TAG, "long");
                     } else {
                         isLongTouched = false;
-                        Log.i(TAG, "short");
                     }
                 }
 
@@ -179,11 +174,11 @@ public class DrawSurface extends SurfaceView {
                         Vibrator vib = (Vibrator) getContext().getSystemService(Service.VIBRATOR_SERVICE);
                         vib.vibrate(200);
                         Log.i("size", rects.size() + " ");
-                        for (int i = 0; i < rects.size(); i++) {
-                            if (rects.get(i)[0] < selectX
-                                    && rects.get(i)[2] > selectX
-                                    && rects.get(i)[1] < selectY
-                                    && rects.get(i)[3] > selectY) {
+                        for (int i = 0; i < rects.size(); ++i) {
+                            if (rects.get(i).left < selectX
+                                    && rects.get(i).right > selectX
+                                    && rects.get(i).top < selectY
+                                    && rects.get(i).bottom > selectY) {
                                 selectInt = i;
                             }
                         }
@@ -226,30 +221,28 @@ public class DrawSurface extends SurfaceView {
                         pY = event.getY();
                         isTouched = true;
                         Log.i(TAG, "rects.size() = " + rects.size());
-
                         newRect.set(selectX, selectY, pX, pY);
-
                         if (event.getX() > bW)
                             newRect.right = bW;
                         if (event.getY() > bH)
                             newRect.left = bH;
+                        invalidate();
                     }
-                    invalidate();
                 }
                 break;
 
             case MotionEvent.ACTION_UP:
-                if (!isLongTouched) {
-                    if (newRect.right - newRect.left < 10
-                            || newRect.bottom - newRect.top < 10) {
-                        newRect = new RectF();
-                        Log.i("remove6", rects.size() + " " + selectInt);
-                    }
+                if (newRect.right - newRect.left < 20
+                        && newRect.bottom - newRect.top < 20) {
+                    newRect = new RectF();
+                    Log.i("remove6", rects.size() + " " + selectInt);
                 }
                 selectX = -1;
                 selectY = -1;
                 isTouched = false;
                 drawTime = -1;
+                rects.add(new RectF(newRect));
+                newRect = new RectF();
                 isLongTouched = false;
                 invalidate();
                 break;
@@ -267,24 +260,25 @@ public class DrawSurface extends SurfaceView {
         return (x > aW && x < bW && y > aH && y < bH);
     }
 
-    public float[] getPoints() {
-        points = new float[rects.size() * 4];
-        for (int i = 0; i < rects.size(); i++) {
-            points[4 * i] = (rects.get(i))[0] - aW;
-            points[4 * i + 1] = (rects.get(i))[1] - aH;
-            points[4 * i + 2] = (rects.get(i))[2] - aW;
-            points[4 * i + 3] = (rects.get(i))[3] - aH;
+    public RectF[] getRects() {
+        RectF[] giveRect = new RectF[rects.size()];
+        for (int i = 0; i < rects.size(); ++i) {
+            giveRect[i] = new RectF();
+            giveRect[i].left = (rects.get(i)).left - aW;
+            giveRect[i].top = (rects.get(i)).top - aH;
+            giveRect[i].right = (rects.get(i)).right - aW;
+            giveRect[i].bottom = (rects.get(i)).bottom - aH;
         }
 
-        return points;
+        return giveRect;
     }
 
-    public void setPoints(float[] points) {
-        this.points = points;
-        rects = new ArrayList<float[]>();
-        for (int i = 0; i < (points.length + 1) / 4; i++) {
-            rects.add(new float[]{points[4 * i] + aW, points[4 * i + 1] + aH,
-                    points[4 * i + 2] + aW, points[4 * i + 3] + aH});
+    public void setRects(RectF[] rectList) {
+        this.rects = new ArrayList<RectF>();
+        for (int i = 0; i < rectList.length; ++i) {
+            rects.add(
+                    new RectF(rectList[i].left + aW, rectList[i].top + aH,
+                            rectList[i].right + aW, rectList[i].bottom + aH));
         }
     }
 
@@ -301,14 +295,11 @@ public class DrawSurface extends SurfaceView {
     public void drawMyView(Canvas canvas) {
         if (rects != null) {
 
-            for (int i = 0; i < rects.size(); i++) {
-                float[] po = rects.get(i);
-                canvas.drawRect(po[0], po[1], po[2], po[3], mPaint);
-
-                Log.i(TAG, po[0] + " " + po[1] + " " + po[2] + " " + po[3]);
-            }
-            canvas.drawRect(newRect, cPaint);
-            if (rects.size() > 0) {
+            Log.i("remove", rects.size() + " " + selectInt);
+            for (int i = 0; i < rects.size(); ++i)
+                canvas.drawRect(rects.get(i), mPaint);
+            if (newRect != null) {
+                canvas.drawRect(newRect, cPaint);
                 drawMagnifier(pX, pY, canvas);
             }
         }
