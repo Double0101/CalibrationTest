@@ -34,11 +34,6 @@ public class CalibrationLab {
         mAppContext = appContext;
         calibrations = new ArrayList<Calibration>();
         mSerializer = new CalibrationSerializer(mAppContext, FILENAME);
-
-//        for (int i = 0; i < 10; i++) {
-//            Calibration c = new Calibration("kdsahf", "hrueiogh");
-//            calibrations.add(c);
-//        }
         try {
             calibrations = mSerializer.loadCalibration();
         } catch (Exception e) {

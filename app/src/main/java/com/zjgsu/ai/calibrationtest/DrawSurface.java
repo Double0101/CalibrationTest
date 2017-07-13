@@ -12,6 +12,7 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PathEffect;
 import android.graphics.PixelFormat;
+import android.graphics.RectF;
 import android.graphics.Shader;
 import android.os.Vibrator;
 import android.support.v7.app.AlertDialog;
@@ -40,6 +41,8 @@ public class DrawSurface extends SurfaceView {
 
     private ArrayList<float[]> rects;
 
+    private RectF newRect;
+
     private float[] points;
 
     private float aW;
@@ -64,7 +67,7 @@ public class DrawSurface extends SurfaceView {
 
     private ImageView imageView;
 
-    private int index = -1;
+    private int drawTime = -1;
 
     private int selectInt = -1;
 
@@ -105,7 +108,7 @@ public class DrawSurface extends SurfaceView {
         multiple = 2f;
         magnifierRadius = 250;
         matrix = new Matrix();
-
+        newRect = new RectF();
     }
 
     public void setImageView(ImageView imageView) {
@@ -144,9 +147,6 @@ public class DrawSurface extends SurfaceView {
         switch (action) {
             case MotionEvent.ACTION_DOWN:
                 if (!isLongTouched && isInArea(event.getX(), event.getY())) {
-                    rects.add(new float[]{
-                            event.getX(), event.getY(), 0, 0
-                    });
                     pX = event.getX();
                     pY = event.getY();
                     selectX = event.getX();
@@ -154,7 +154,6 @@ public class DrawSurface extends SurfaceView {
                     isTouched = false;
                     isLongTouched = false;
                     startClickTime = Calendar.getInstance().getTimeInMillis();
-                    index = rects.size() - 1;
                 }
                 break;
 
@@ -174,70 +173,83 @@ public class DrawSurface extends SurfaceView {
                 }
 
                 if (isLongTouched) {
-                    Log.d("fsferwgvf", "执行了这个语句第nnn次");
-                    Vibrator vib = (Vibrator) getContext().getSystemService(Service.VIBRATOR_SERVICE);
-                    vib.vibrate(200);
-                    for (int i = 0; i < rects.size(); i++) {
-                        if (rects.get(i)[0] < selectX
-                                && rects.get(i)[2] > selectX
-                                && rects.get(i)[1] < selectY
-                                && rects.get(i)[3] > selectY) {
-                            selectInt = i;
+                    if (selectInt == -1) {
+                        Log.i("remove1", rects.size() + " " + selectInt);
+                        Log.d("fsferwgvf", "执行了这个语句第nnn次");
+                        Vibrator vib = (Vibrator) getContext().getSystemService(Service.VIBRATOR_SERVICE);
+                        vib.vibrate(200);
+                        Log.i("size", rects.size() + " ");
+                        for (int i = 0; i < rects.size(); i++) {
+                            if (rects.get(i)[0] < selectX
+                                    && rects.get(i)[2] > selectX
+                                    && rects.get(i)[1] < selectY
+                                    && rects.get(i)[3] > selectY) {
+                                selectInt = i;
+                            }
+                        }
+                        Log.i("remove2", rects.size() + " " + selectInt);
+
+
+                        if (selectInt != -1) {
+                            Log.i(TAG, "jioejf");
+                            new AlertDialog.Builder(getContext())
+                                    .setTitle("删除该标定区域")
+                                    .setMessage("您确定要删除该标定吗？")
+                                    .setPositiveButton("是", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            Log.i("remove3", rects.size() + " " + selectInt);
+                                            rects.remove(selectInt);
+                                            Log.i("remove4", rects.size() + " " + selectInt);
+                                            selectInt = -1;
+                                            dialog.cancel();
+                                            invalidate();
+                                            isLongTouched = false;
+                                        }
+                                    }).setNegativeButton("否", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+                                    selectInt = -1;
+                                    invalidate();
+                                    isLongTouched = false;
+                                }
+                            }).show();
+                        } else {
+                            Toast.makeText(getContext(), "您未选任何标注区域", Toast.LENGTH_SHORT).show();
+                            isLongTouched = false;
                         }
                     }
-
-                    if (selectInt != -1) {
-                        new AlertDialog.Builder(getContext())
-                                .setTitle("删除该标定区域")
-                                .setMessage("您确定要删除该标定吗？")
-                                .setPositiveButton("是", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        rects.remove(selectInt);
-                                        selectInt = -1;
-                                        dialog.cancel();
-                                        invalidate();
-                                        isLongTouched = false;
-                                    }
-                                }).setNegativeButton("否", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                                isLongTouched = false;
-                            }
-                        }).show();
-                    } else {
-                        Toast.makeText(getContext(), "您未选任何标注区域", Toast.LENGTH_SHORT).show();
-                        isLongTouched = false;
-                    }
                 } else {
-                    pX = event.getX();
-                    pY = event.getY();
-                    isTouched = true;
-                    Log.i(TAG, "rects.size() = " + rects.size());
-                    Log.i(TAG, "index = " + index);
-                    if (event.getX() > bW) {
-                        rects.get(index)[2] = bW;
-                    } else {
-                        (rects.get(index))[2] = event.getX();
+                    if (!isLongTouched) {
+                        pX = event.getX();
+                        pY = event.getY();
+                        isTouched = true;
+                        Log.i(TAG, "rects.size() = " + rects.size());
+
+                        newRect.set(selectX, selectY, pX, pY);
+
+                        if (event.getX() > bW)
+                            newRect.right = bW;
+                        if (event.getY() > bH)
+                            newRect.left = bH;
                     }
-                    if (event.getY() > bH) {
-                        rects.get(index)[3] = bH;
-                    } else
-                        (rects.get(index))[3] = event.getY();
+                    invalidate();
                 }
-                invalidate();
                 break;
 
             case MotionEvent.ACTION_UP:
-                if (rects.get(index)[2] == 0
-                        || rects.get(index)[3] == 0
-                        || rects.get(index)[2] - rects.get(index)[0] < 10
-                        || rects.get(index)[3] - rects.get(index)[1] < 10) {
-                    rects.remove(index);
+                if (!isLongTouched) {
+                    if (newRect.right - newRect.left < 10
+                            || newRect.bottom - newRect.top < 10) {
+                        newRect = new RectF();
+                        Log.i("remove6", rects.size() + " " + selectInt);
+                    }
                 }
+                selectX = -1;
+                selectY = -1;
                 isTouched = false;
-                index = -1;
+                drawTime = -1;
                 isLongTouched = false;
                 invalidate();
                 break;
@@ -252,9 +264,7 @@ public class DrawSurface extends SurfaceView {
 
 
     private boolean isInArea(float x, float y) {
-        if (x > aW && x < bW && y > aH && y < bH)
-            return true;
-        return false;
+        return (x > aW && x < bW && y > aH && y < bH);
     }
 
     public float[] getPoints() {
@@ -297,11 +307,7 @@ public class DrawSurface extends SurfaceView {
 
                 Log.i(TAG, po[0] + " " + po[1] + " " + po[2] + " " + po[3]);
             }
-            if (index != -1) {
-                float[] p = rects.get(index);
-                canvas.drawRect(p[0], p[1], p[2], p[3], cPaint);
-            }
-
+            canvas.drawRect(newRect, cPaint);
             if (rects.size() > 0) {
                 drawMagnifier(pX, pY, canvas);
             }
