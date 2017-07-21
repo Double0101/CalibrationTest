@@ -1,5 +1,7 @@
 package com.zjgsu.ai.calibrationtest;
 
+import android.graphics.RectF;
+
 import com.google.gson.Gson;
 
 import org.json.JSONException;
@@ -13,26 +15,26 @@ public class Area {
 
     private static final String AREA = "area";
 
-    private float[] points;
+    private RectF[] rectFs;
 
     private Gson gson = new Gson();
 
-    public Area(float[] points) {
-        this.points = points;
+    public Area(RectF[] points) {
+        this.rectFs = points;
     }
 
-    public float[] getArray() {
-        return points;
+    public RectF[] getRects() {
+        return rectFs;
     }
 
     public Area(JSONObject json) throws JSONException {
         String str = json.getString(AREA);
-        points = gson.fromJson(str, float[].class);
+        rectFs = gson.fromJson(str, RectF[].class);
     }
 
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
-        String str = gson.toJson(points);
+        String str = gson.toJson(rectFs);
         json.put(AREA, str);
 
         return json;

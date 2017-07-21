@@ -12,8 +12,8 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PathEffect;
 import android.graphics.PixelFormat;
+import android.graphics.RectF;
 import android.graphics.Shader;
-import android.os.Handler;
 import android.os.Vibrator;
 import android.support.v7.app.AlertDialog;
 import android.util.AttributeSet;
@@ -26,20 +26,22 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Created by Double on 10/06/2017.
  */
 
-public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
+public class DrawSurface extends SurfaceView {
+
+    private static boolean isLongTouched = false;
 
     private static final String TAG = "Calibration-Click";
 
-    private ArrayList<float[]> rects;
+    private static final int MIN_CLICK_DURATION = 2000;
 
-    private float[] points;
+    private ArrayList<RectF> rects;
+
+    private RectF newRect;
 
     private float aW;
 
@@ -63,9 +65,17 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
     private ImageView imageView;
 
-    private int index = -1;
+    private int drawTime = -1;
 
-    private boolean isCached = false;
+    private int selectInt = -1;
+
+    private long startClickTime = 0;
+
+    private float selectX;
+
+    private float selectY;
+
+    private boolean isTouched = false;
 
     private Bitmap bitmap;
 
@@ -87,17 +97,14 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
         super(context, attrs);
         setWillNotDraw(false);
         setZOrderOnTop(true);
-        points = new float[4];
-        rects = new ArrayList<float[]>();
+        rects = new ArrayList<RectF>();
         holder = getHolder();
         holder.setFormat(PixelFormat.TRANSPARENT);
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        holder.addCallback(this);
         initPaint();
         multiple = 2f;
         magnifierRadius = 250;
         matrix = new Matrix();
-
     }
 
     public void setImageView(ImageView imageView) {
@@ -135,52 +142,113 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
         pY = event.getY();
         switch (action) {
             case MotionEvent.ACTION_DOWN:
-                if (isInArea(event.getX(), event.getY())) {
-                    rects.add(new float[]{
-                            event.getX(), event.getY(), 0, 0
-                    });
+                if (!isLongTouched && isInArea(event.getX(), event.getY())) {
+                    newRect = new RectF();
                     pX = event.getX();
                     pY = event.getY();
-                    isCached = false;
-                    index = rects.size() - 1;
+                    selectX = event.getX();
+                    selectY = event.getY();
+                    isTouched = false;
+                    isLongTouched = false;
+                    startClickTime = Calendar.getInstance().getTimeInMillis();
                 }
                 break;
 
             case MotionEvent.ACTION_MOVE:
-                    if (Math.abs(rects.get(rects.size() - 1)[0] - event.getX()) > 10
-                            || Math.abs(rects.get(rects.size() - 1)[1] - event.getY()) > 10) {
+                if (Math.abs(newRect.left - event.getX()) > 20
+                        || Math.abs(newRect.top - event.getY()) > 20) {
+                    isLongTouched = false;
+                } else {
+                    long clickDuration = Calendar.getInstance().getTimeInMillis() - startClickTime;
+                    if (clickDuration >= MIN_CLICK_DURATION) {
+                        isLongTouched = true;
+                    } else {
+                        isLongTouched = false;
+                    }
+                }
+
+                if (isLongTouched) {
+                    if (selectInt == -1) {
+                        Log.i("remove1", rects.size() + " " + selectInt);
+                        Log.d("fsferwgvf", "执行了这个语句第nnn次");
+                        Vibrator vib = (Vibrator) getContext().getSystemService(Service.VIBRATOR_SERVICE);
+                        vib.vibrate(200);
+                        Log.i("size", rects.size() + " ");
+                        for (int i = 0; i < rects.size(); ++i) {
+                            if (rects.get(i).left < selectX
+                                    && rects.get(i).right > selectX
+                                    && rects.get(i).top < selectY
+                                    && rects.get(i).bottom > selectY) {
+                                selectInt = i;
+                            }
+                        }
+                        Log.i("remove2", rects.size() + " " + selectInt);
+
+
+                        if (selectInt != -1) {
+                            Log.i(TAG, "jioejf");
+                            new AlertDialog.Builder(getContext())
+                                    .setTitle("删除该标定区域")
+                                    .setMessage("您确定要删除该标定吗？")
+                                    .setPositiveButton("是", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            Log.i("remove3", rects.size() + " " + selectInt);
+                                            rects.remove(selectInt);
+                                            Log.i("remove4", rects.size() + " " + selectInt);
+                                            selectInt = -1;
+                                            dialog.cancel();
+                                            invalidate();
+                                            isLongTouched = false;
+                                        }
+                                    }).setNegativeButton("否", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+                                    selectInt = -1;
+                                    invalidate();
+                                    isLongTouched = false;
+                                }
+                            }).show();
+                        } else {
+                            Toast.makeText(getContext(), "您未选任何标注区域", Toast.LENGTH_SHORT).show();
+                            isLongTouched = false;
+                        }
+                    }
+                } else {
+                    if (!isLongTouched) {
                         pX = event.getX();
                         pY = event.getY();
-                        isCached = true;
-                        if (event.getX() > bW) {
-                            rects.get(index)[2] = bW;
-                        } else {
-                            (rects.get(index))[2] = event.getX();
-                        }
-                        if (event.getY() > bH) {
-                            rects.get(index)[3] = bH;
-                        } else
-                            (rects.get(index))[3] = event.getY();
+                        isTouched = true;
+                        Log.i(TAG, "rects.size() = " + rects.size());
+                        newRect.set(selectX, selectY, pX, pY);
+                        if (event.getX() > bW)
+                            newRect.right = bW;
+                        if (event.getY() > bH)
+                            newRect.left = bH;
                         invalidate();
-                    } else {
-
                     }
+                }
                 break;
 
             case MotionEvent.ACTION_UP:
-                    if (rects.get(index)[2] == 0
-                            || rects.get(index)[3] == 0
-                            || rects.get(index)[2] - rects.get(index)[0] < 10
-                            || rects.get(index)[3] - rects.get(index)[1] < 10) {
-                        rects.remove(index);
-                    }
-                isCached = false;
-                index = -1;
+                if (newRect.right - newRect.left < 20
+                        && newRect.bottom - newRect.top < 20) {
+                    newRect = new RectF();
+                    Log.i("remove6", rects.size() + " " + selectInt);
+                }
+                selectX = -1;
+                selectY = -1;
+                isTouched = false;
+                drawTime = -1;
+                rects.add(new RectF(newRect));
+                newRect = new RectF();
+                isLongTouched = false;
                 invalidate();
                 break;
 
             case MotionEvent.ACTION_CANCEL:
-                isCached = false;
+                isTouched = false;
                 invalidate();
                 break;
         }
@@ -189,41 +257,28 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
 
 
     private boolean isInArea(float x, float y) {
-        if (x > aW && x < bW && y > aH && y < bH)
-            return true;
-        return false;
+        return (x > aW && x < bW && y > aH && y < bH);
     }
 
-    @Override
-    public void surfaceCreated(final SurfaceHolder holder) {
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-    }
-
-    public float[] getPoints() {
-        points = new float[rects.size() * 4];
-        for (int i = 0; i < rects.size(); i++) {
-            points[4 * i] = (rects.get(i))[0] - aW;
-            points[4 * i + 1] = (rects.get(i))[1] - aH;
-            points[4 * i + 2] = (rects.get(i))[2] - aW;
-            points[4 * i + 3] = (rects.get(i))[3] - aH;
+    public RectF[] getRects() {
+        RectF[] giveRect = new RectF[rects.size()];
+        for (int i = 0; i < rects.size(); ++i) {
+            giveRect[i] = new RectF();
+            giveRect[i].left = (rects.get(i)).left - aW;
+            giveRect[i].top = (rects.get(i)).top - aH;
+            giveRect[i].right = (rects.get(i)).right - aW;
+            giveRect[i].bottom = (rects.get(i)).bottom - aH;
         }
 
-        return points;
+        return giveRect;
     }
 
-    public void setPoints(float[] points) {
-        this.points = points;
-        rects = new ArrayList<float[]>();
-        for (int i = 0; i < (points.length + 1) / 4; i++) {
-            rects.add(new float[]{points[4 * i] + aW, points[4 * i + 1] + aH,
-                    points[4 * i + 2] + aW, points[4 * i + 3] + aH});
+    public void setRects(RectF[] rectList) {
+        this.rects = new ArrayList<RectF>();
+        for (int i = 0; i < rectList.length; ++i) {
+            rects.add(
+                    new RectF(rectList[i].left + aW, rectList[i].top + aH,
+                            rectList[i].right + aW, rectList[i].bottom + aH));
         }
     }
 
@@ -240,18 +295,11 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
     public void drawMyView(Canvas canvas) {
         if (rects != null) {
 
-            for (int i = 0; i < rects.size(); i++) {
-                float[] po = rects.get(i);
-                canvas.drawRect(po[0], po[1], po[2], po[3], mPaint);
-
-                Log.i(TAG, po[0] + " " + po[1] + " " + po[2] + " " + po[3]);
-            }
-            if (index != -1) {
-                float[] p = rects.get(index);
-                canvas.drawRect(p[0], p[1], p[2], p[3], cPaint);
-            }
-
-            if (rects.size() > 0) {
+            Log.i("remove", rects.size() + " " + selectInt);
+            for (int i = 0; i < rects.size(); ++i)
+                canvas.drawRect(rects.get(i), mPaint);
+            if (newRect != null) {
+                canvas.drawRect(newRect, cPaint);
                 drawMagnifier(pX, pY, canvas);
             }
         }
@@ -263,7 +311,7 @@ public class DrawSurface extends SurfaceView implements SurfaceHolder.Callback {
             imageView.buildDrawingCache();
             bitmap = imageView.getDrawingCache();
         }
-        if (isCached) {
+        if (isTouched) {
             shader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
             magnifierPaint.setShader(shader);
             matrix.reset();

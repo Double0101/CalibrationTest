@@ -38,14 +38,8 @@ public class CalibrationActivity extends AppCompatActivity {
     }
 
     public void touchFinish(View view) {
-        float[] points = myDrawView.getPoints();
-        Intent data = new Intent();
-        Bundle bundle = new Bundle();
-        bundle.putInt("index", index);
-        bundle.putFloatArray("points", points);
-        data.putExtra("bundle2", bundle);
-        setResult(RESULT_OK, data);
-
+        CalibrationLab.get(getApplication()).getCalibrations()
+                .get(index).setArea(new Area(myDrawView.getRects()));
         finish();
     }
 
