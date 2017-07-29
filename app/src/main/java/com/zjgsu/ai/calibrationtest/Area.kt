@@ -12,8 +12,8 @@ class Area private constructor() {
     companion object {
         private val AREA: String = "area"
     }
-    var rectFs: Array<RectF>? = null
-    var gson: Gson? = null
+    private var rectFs: Array<RectF>? = null
+    private var gson: Gson? = null
     fun getRects() : Array<RectF> { return rectFs!! }
 
     constructor(json: JSONObject) : this() {
