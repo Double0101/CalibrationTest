@@ -38,7 +38,7 @@ public class CalibrationActivity extends AppCompatActivity {
     }
 
     public void touchFinish(View view) {
-        CalibrationLab.get(getApplication()).getCalibrations()
+        CalibrationLab.Companion.get(getApplication()).getCalibrations()
                 .get(index).setArea(new Area(myDrawView.getRects()));
         finish();
     }

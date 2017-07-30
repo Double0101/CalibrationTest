@@ -38,7 +38,7 @@ public class MyDrawView extends RelativeLayout {
     }
 
     public void setIndex(int index) {
-        mCalibration = CalibrationLab.get(mContext).getCalibrations().get(index);
+        mCalibration = CalibrationLab.Companion.get(mContext).getCalibrations().get(index);
     }
 
     private void initImage() {
