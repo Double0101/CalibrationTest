@@ -18,18 +18,14 @@ class Calibration private constructor() {
 
     private lateinit var category: String
     fun getCategory() = category
-    fun setCategory(c: String) {
-        category = c
-    }
+    fun setCategory(c: String) { category = c }
+
     private lateinit var mArea: Area
     fun getArea() = mArea
-    fun setArea(area: Area) {
-        mArea = area
-    }
+    fun setArea(area: Area) { mArea = area }
+
     private var src: Photo? = null
-        set(value) {
-            this.src = value
-        }
+    fun setSrc(p: String) { src = Photo(p) }
 
     fun getPhotoPath() = src?.getPath()
 
