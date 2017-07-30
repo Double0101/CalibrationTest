@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_calibration);
-        mCalibrations = CalibrationLab.get(this).getCalibrations();
+        mCalibrations = CalibrationLab.Companion.get(this).getCalibrations();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        CalibrationLab.get(this).saveCalibrations();
+        CalibrationLab.Companion.get(this).saveCalibrations();
     }
 
     @Override

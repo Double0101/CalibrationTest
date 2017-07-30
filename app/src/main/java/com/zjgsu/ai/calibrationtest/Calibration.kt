@@ -1,10 +1,12 @@
 package com.zjgsu.ai.calibrationtest
 
+import org.json.JSONObject
+
 /**
  * Created by Double on 30/07/2017.
  */
 
-class Calibration {
+class Calibration private constructor() {
 
     companion object {
         private val JSON_CATEGORY: String = "category"
@@ -14,68 +16,46 @@ class Calibration {
         private var count: Int = 0
     }
 
-    private var category: String? = null
-    private var mArea: Area? = null
+    private lateinit var category: String
+    fun getCategory() = category
+    fun setCategory(c: String) {
+        category = c
+    }
+    private lateinit var mArea: Area
+    fun getArea() = mArea
+    fun setArea(area: Area) {
+        mArea = area
+    }
     private var src: Photo? = null
+        set(value) {
+            this.src = value
+        }
 
+    fun getPhotoPath() = src?.getPath()
 
+    fun getAreaRects() = mArea?.getRects()
+
+    constructor(category: String, path: String) : this() {
+        this.category = category
+        this.src = Photo(path)
+    }
+
+    constructor(json: JSONObject) : this() {
+        category = json.getString(JSON_CATEGORY)
+        src = Photo(json.getJSONObject(JSON_PHOTO))
+        if (json.has(JSON_AREA))
+            mArea = Area(json.getJSONObject(JSON_AREA))
+    }
+
+    fun toJSON(): JSONObject {
+        var json: JSONObject = JSONObject()
+        json.put(JSON_CATEGORY, category)
+        json.put(JSON_PHOTO, src?.toJSON())
+        json.put(JSON_AREA, mArea?.toJSON())
+
+        return json
+    }
+
+    override fun toString() = category
 
 }
-//public class Calibration {
-//    public String getCategory() {
-//        return category;
-//    }
-//
-//    public Calibration(String category, String path) {
-//        this.category = category;
-//        this.src = new Photo(path);
-//    }
-//
-//    public Calibration(JSONObject json) throws JSONException {
-//        category = json.getString(JSON_CATEGORY);
-//        src = new Photo(json.getJSONObject(JSON_PHOTO));
-//        if (json.has(JSON_AREA))
-//            mArea = new Area(json.getJSONObject(JSON_AREA));
-//    }
-//
-//    public JSONObject toJSON() throws JSONException {
-//        JSONObject json = new JSONObject();
-//        json.put(JSON_CATEGORY, category);
-//        json.put(JSON_PHOTO, src.toJSON());
-//        if (mArea != null)
-//            json.put(JSON_AREA, mArea.toJSON());
-//        return json;
-//    }
-//
-//    public void setCategory(String category) {
-//        this.category = category;
-//    }
-//
-//    public void setSrc(Photo src) {
-//        this.src = src;
-//    }
-//
-//    public void setArea(Area area) {
-//        this.mArea = area;
-//    }
-//
-//    public Area getArea() {
-//        return mArea;
-//    }
-//
-//    public RectF[] getAreaRects() {
-//        if (mArea != null) {
-//            return mArea.getRects();
-//        } else
-//            return null;
-//    }
-//
-//    public String getPhotoPath() {
-//        return src.getPath();
-//    }
-//
-//    @Override
-//    public String toString() {
-//        return category;
-//    }
-//}

@@ -5,7 +5,7 @@ import org.json.JSONObject
 /**
  * Created by Double on 28/07/2017.
  */
-class Photo constructor(private val path: String) {
+class Photo constructor(private var path: String) {
     companion object {
         private val JSON_FILENAME: String = "path"
     }

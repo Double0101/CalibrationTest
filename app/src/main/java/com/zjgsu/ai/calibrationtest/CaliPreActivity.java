@@ -55,7 +55,7 @@ public class CaliPreActivity extends AppCompatActivity{
             public void onClick(View v) {
                 category = editText.getText().toString();
                 if (path != null && category != null) {
-                    CalibrationLab.get(getApplication()).addCalibration(new Calibration(category, path));
+                    CalibrationLab.Companion.get(getApplication()).addCalibration(new Calibration(category, path));
 //                    Intent data = new Intent();
 //                    Bundle bundle = new Bundle();
 //                    bundle.putString("category", category);
