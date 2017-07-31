@@ -62,7 +62,7 @@ public class Calibration {
         return mArea;
     }
 
-    public RectF[] getAreaRects() {
+    public MyRectF[] getAreaRects() {
         if (mArea != null) {
             return mArea.getRects();
         } else

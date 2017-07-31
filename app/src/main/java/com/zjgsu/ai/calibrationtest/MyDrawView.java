@@ -98,7 +98,7 @@ public class MyDrawView extends RelativeLayout {
         drawSurface.setMultiple(i);
     }
 
-    public RectF[] getRects() {
+    public MyRectF[] getRects() {
         return drawSurface.getRects();
     }
 }

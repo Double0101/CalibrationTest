@@ -15,21 +15,21 @@ public class Area {
 
     private static final String AREA = "area";
 
-    private RectF[] rectFs;
+    private MyRectF[] rectFs;
 
     private Gson gson = new Gson();
 
-    public Area(RectF[] points) {
+    public Area(MyRectF[] points) {
         this.rectFs = points;
     }
 
-    public RectF[] getRects() {
+    public MyRectF[] getRects() {
         return rectFs;
     }
 
     public Area(JSONObject json) throws JSONException {
         String str = json.getString(AREA);
-        rectFs = gson.fromJson(str, RectF[].class);
+        rectFs = gson.fromJson(str, MyRectF[].class);
     }
 
     public JSONObject toJSON() throws JSONException {
