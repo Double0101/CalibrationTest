@@ -56,14 +56,20 @@ public class DrawSurface extends SurfaceView {
     private ImageView imageView;
 
     private boolean isTouched = false;
+    private boolean isMove = false;
+    private boolean isDelete = false;
 
     private Bitmap bitmap;
     private BitmapShader shader;
     private Matrix matrix;
 
     private int t = 0;
+    private int whichRect = -1;
 
     private float multiple;
+
+    private float qX;
+    private float qY;
 
     private float pX;
     private float pY;
@@ -149,6 +155,7 @@ public class DrawSurface extends SurfaceView {
 
     /**
      * 改变放大镜的放大倍数
+     *
      * @param multiple
      */
     public void setMultiple(float multiple) {
@@ -185,9 +192,8 @@ public class DrawSurface extends SurfaceView {
             matrix.reset();
             if (multiple == 1)
                 matrix.postTranslate(0, -magnifierRadius);
-            else {
+            else
                 matrix.postScale(multiple, multiple, x, y + magnifierRadius / (multiple - 1));
-            }
             magnifierPaint.getShader().setLocalMatrix(matrix);
             canvas.drawCircle(x, y - magnifierRadius, magnifierRadius, magnifierPaint);
             canvas.drawLine(x - magnifierRadius, y - magnifierRadius, x + magnifierRadius, y - magnifierRadius, linePaint);
@@ -199,6 +205,7 @@ public class DrawSurface extends SurfaceView {
     /**
      * 通过父类容器调用
      * 得到图片的留白的点的位置
+     *
      * @param bdW
      * @param bdH
      * @param lW
@@ -211,11 +218,29 @@ public class DrawSurface extends SurfaceView {
         bH = lH;
     }
 
+    public int whichMove(float x, float y) {
+        for (int i = 0; i < rects.size(); i++)
+            if (rects.get(i).isPointMove(x, y))
+                return i;
+        return -1;
+    }
+
+    public int whichDelete(float x, float y) {
+        for (int i = 0; i < rects.size(); i++)
+            if (rects.get(i).isPointDelete(x, y))
+                return i;
+        return -1;
+    }
+
     class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
             //  判断触摸到了哪个点
-            //  比如删除的点，移动的点
+            if (isDelete) {
+                
+            } else {
+                Toast.makeText(getContext(), "没有选中任何要删除的标注", Toast.LENGTH_SHORT).show();
+            }
             return super.onSingleTapConfirmed(e);
         }
 
@@ -235,12 +260,27 @@ public class DrawSurface extends SurfaceView {
         public boolean onDown(MotionEvent e) {
             pX = e.getX();
             pY = e.getY();
+            whichRect = whichMove(pX, pY);
+            if (whichRect != -1) {
+                isMove = true;
+            } else {
+                whichRect = whichDelete(pX, pY);
+                isDelete = (whichRect == -1) ? false : true;
+            }
             return super.onDown(e);
         }
 
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
             //  滑动触摸事件
+            if (isMove) {
+
+            } else if (isDelete) {
+
+            } else {
+                //  画框
+
+            }
             return super.onScroll(e1, e2, distanceX, distanceY);
         }
     }
