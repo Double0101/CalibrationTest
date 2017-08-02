@@ -22,6 +22,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.SurfaceHolder;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -76,7 +77,7 @@ public class DrawSurface extends SurfaceView {
     private float pY;
 
     private SurfaceHolder holder;
-    private MyGestureDetector detector;
+    private GestureDetector detector;
 
     public DrawSurface(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -84,11 +85,13 @@ public class DrawSurface extends SurfaceView {
         setZOrderOnTop(true);
         rects = new ArrayList<MyRectF>();
         holder = getHolder();
+        MyGestureDetector myGestureDetector = new MyGestureDetector();
+        detector = new GestureDetector(getContext(), myGestureDetector);
+        detector.setOnDoubleTapListener(myGestureDetector);
         newRect = null;
         holder.setFormat(PixelFormat.TRANSPARENT);
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         initPaint();
-        detector = new MyGestureDetector();
         multiple = 2f;
         magnifierRadius = 250;
         matrix = new Matrix();
@@ -254,6 +257,7 @@ public class DrawSurface extends SurfaceView {
     class MyGestureDetector extends GestureDetector.SimpleOnGestureListener {
         @Override
         public boolean onDoubleTap(MotionEvent e) {
+            Log.i(TAG, "###");
             if (whichRect != -1)
                 rects.remove(whichRect);
             else {
@@ -286,12 +290,14 @@ public class DrawSurface extends SurfaceView {
 
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
+            Log.i(TAG, "333");
             clean();
             return super.onSingleTapUp(e);
         }
 
         @Override
         public boolean onDown(MotionEvent e) {
+            Log.i(TAG, "111");
             pX = e.getX();
             pY = e.getY();
             whichRect = whichAjsut(pX, pY);
@@ -308,6 +314,7 @@ public class DrawSurface extends SurfaceView {
 
         @Override
         public void onShowPress(MotionEvent e) {
+            Log.i(TAG, "222");
             qX = e.getX();
             qY = e.getY();
             if (whichRect != -1) {
