@@ -28,7 +28,7 @@ import java.util.Calendar;
  */
 
 public class DrawSurface extends SurfaceView implements GestureDetector.OnGestureListener {
-    private static final String TAG = "Calibration-Click";
+    private static final String TAG = "";
     private ArrayList<MyRectF> rects;
 
     private MyRectF newRect;
@@ -49,6 +49,7 @@ public class DrawSurface extends SurfaceView implements GestureDetector.OnGestur
     private int magnifierRadius;
 
     private ImageView imageView;
+    private GestureDetector detector;
 
     private boolean isTouched = false;
     private boolean isAjust = false;
@@ -71,7 +72,6 @@ public class DrawSurface extends SurfaceView implements GestureDetector.OnGestur
     private float pY;
 
     private SurfaceHolder holder;
-//    private GestureDetector detector;
 
     public DrawSurface(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -79,7 +79,7 @@ public class DrawSurface extends SurfaceView implements GestureDetector.OnGestur
         setZOrderOnTop(true);
         rects = new ArrayList<MyRectF>();
         holder = getHolder();
-//        detector = new GestureDetector(context, new MyGestureDetector());
+        detector = new GestureDetector(this);
         newRect = null;
         holder.setFormat(PixelFormat.TRANSPARENT);
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -124,6 +124,7 @@ public class DrawSurface extends SurfaceView implements GestureDetector.OnGestur
 
     /**
      * 判断点是否在屏幕中的图片区域
+     *
      * @param x
      * @param y
      * @return
@@ -154,6 +155,7 @@ public class DrawSurface extends SurfaceView implements GestureDetector.OnGestur
 
     /**
      * 改变放大镜的放大倍数
+     *
      * @param multiple
      */
     public void setMultiple(float multiple) {
@@ -199,6 +201,7 @@ public class DrawSurface extends SurfaceView implements GestureDetector.OnGestur
     /**
      * 通过父类容器调用
      * 得到图片的留白的点的位置
+     *
      * @param bdW
      * @param bdH
      * @param lW
@@ -214,6 +217,7 @@ public class DrawSurface extends SurfaceView implements GestureDetector.OnGestur
     /**
      * 判断触点在哪个框的两个点周围
      * 随后可以对这个框的大小进行调整
+     *
      * @param x
      * @param y
      * @return
@@ -229,6 +233,7 @@ public class DrawSurface extends SurfaceView implements GestureDetector.OnGestur
 
     /**
      * 判断触点在哪个框的中央
+     *
      * @param x
      * @param y
      * @return
@@ -247,127 +252,106 @@ public class DrawSurface extends SurfaceView implements GestureDetector.OnGestur
     }
 
     @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        detector.onTouchEvent(event);
+        return true;
+    }
+
+    @Override
     public boolean onDown(MotionEvent e) {
+        Log.i(TAG, "111");
+            pX = e.getX();
+            pY = e.getY();
+            whichRect = whichAjsut(pX, pY);
+            if (whichRect != -1)
+                isAjust = true;
+            else {
+                whichRect = inWhichCenter(pX, pY);
+                if (whichRect != -1)
+                    isMove = true;
+            }
+            newRect = new MyRectF();
         return false;
     }
 
     @Override
     public void onShowPress(MotionEvent e) {
+            Log.i(TAG, "222");
 
     }
 
     @Override
     public boolean onSingleTapUp(MotionEvent e) {
+        Log.i(TAG, "333");
+        clean();
         return false;
     }
 
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        // delete
+        Log.i(TAG, "^^^");
+        qX = e2.getX();
+        qY = e2.getY();
+        if (whichRect != -1) {
+            newRect = null;
+            newRect = rects.get(whichRect);
+            if (isAjust) {
+                //  移动点
+                if (whichPoint == 0) {
+                    newRect.left = e2.getX();
+                    newRect.top = e2.getY();
+                } else if (whichPoint == 1){
+                    newRect.right = e2.getX();
+                    newRect.bottom = e2.getY();
+                }
+            }
+            else if (isMove) {
+                //  move
+                newRect.move(pX, pY, qX, qY);
+            }
+        } else {
+            //  画框
+            newRect.set(pX, pY, qX, qY);
+        }
+        invalidate();
         return false;
     }
 
     @Override
     public void onLongPress(MotionEvent e) {
-
+        Log.i(TAG, "&&&");
     }
 
     @Override
     public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        Log.i(TAG, "###" + velocityX);
+        if (whichRect != -1)
+            rects.remove(whichRect);
+        else {
+            pX = e1.getX();
+            pY = e2.getY();
+            whichRect = whichAjsut(pX, pY);
+            if (whichRect != -1)
+                new AlertDialog.Builder(getContext())
+                        .setTitle("删除该标定区域")
+                        .setMessage("您确定要删除该标定吗？")
+                        .setPositiveButton("是", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                rects.remove(whichRect);
+                                dialog.cancel();
+
+                            }
+                        }).setNegativeButton("否", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                }).show();
+            else
+                Toast.makeText(getContext(), "您并没有选择任何标注区域", Toast.LENGTH_SHORT).show();
+        }
+        invalidate();
         return false;
     }
-
-//    @Override
-//    public boolean onTouchEvent(MotionEvent event) {
-//        detector.onTouchEvent(event);
-//        return super.onTouchEvent(event);
-//    }
-//
-//    class MyGestureDetector extends GestureDetector.SimpleOnGestureListener {
-//        @Override
-//        public boolean onDoubleTap(MotionEvent e) {
-//            Log.i(TAG, "###");
-//            if (whichRect != -1)
-//                rects.remove(whichRect);
-//            else {
-//                pX = e.getX();
-//                pY = e.getY();
-//                whichRect = whichAjsut(pX, pY);
-//                if (whichRect != -1)
-//                    new AlertDialog.Builder(getContext())
-//                            .setTitle("删除该标定区域")
-//                            .setMessage("您确定要删除该标定吗？")
-//                            .setPositiveButton("是", new DialogInterface.OnClickListener() {
-//                                @Override
-//                                public void onClick(DialogInterface dialog, int which) {
-//                                    rects.remove(whichRect);
-//                                    dialog.cancel();
-//
-//                                }
-//                            }).setNegativeButton("否", new DialogInterface.OnClickListener() {
-//                        @Override
-//                        public void onClick(DialogInterface dialog, int which) {
-//                            dialog.cancel();
-//                        }
-//                    }).show();
-//                else
-//                    Toast.makeText(getContext(), "您并没有选择任何标注区域", Toast.LENGTH_SHORT).show();
-//            }
-//            invalidate();
-//            return true;
-//        }
-//
-//        @Override
-//        public boolean onSingleTapUp(MotionEvent e) {
-//            Log.i(TAG, "333");
-////            clean();
-//            return true;
-//        }
-//
-//        @Override
-//        public boolean onDown(MotionEvent e) {
-//            Log.i(TAG, "111");
-////            pX = e.getX();
-////            pY = e.getY();
-////            whichRect = whichAjsut(pX, pY);
-////            if (whichRect != -1)
-////                isAjust = true;
-////            else {
-////                whichRect = inWhichCenter(pX, pY);
-////                if (whichRect != -1)
-////                    isMove = true;
-////            }
-////            newRect = new MyRectF();
-//            return true;
-//        }
-//
-//        @Override
-//        public void onShowPress(MotionEvent e) {
-//            Log.i(TAG, "222");
-////            qX = e.getX();
-////            qY = e.getY();
-////            if (whichRect != -1) {
-////                newRect = null;
-////                newRect = rects.get(whichRect);
-////                if (isAjust) {
-////                    //  移动点
-////                    if (whichPoint == 0) {
-////                        newRect.left = e.getX();
-////                        newRect.top = e.getY();
-////                    } else if (whichPoint == 1){
-////                        newRect.right = e.getX();
-////                        newRect.bottom = e.getY();
-////                    }
-////                }
-////                else if (isMove) {
-////                    //  move
-////                    newRect.move(pX, pY, qX, qY);
-////                }
-////            } else {
-////                //  画框
-////                newRect.set(pX, pY, qX, qY);
-////            }
-////            invalidate();
-//        }
-//    }
 }
