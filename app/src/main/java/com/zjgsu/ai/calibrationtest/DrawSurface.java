@@ -277,34 +277,36 @@ public class DrawSurface extends SurfaceView {
     private class MyDetector extends GestureDetector.SimpleOnGestureListener {
 
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            Log.i(TAG, "onScroll");
-            if (newRect == null) {
-                whichRect = whichAjsut(e1.getX(), e1.getY());
-                if (whichRect == -1) {
-                    newRect = new MyRectF();
+            if (isInArea(e1.getX(), e1.getY()) && isInArea(e2.getX(), e2.getY())) {
+                Log.i(TAG, "onScroll");
+                if (newRect == null) {
+                    whichRect = whichAjsut(e1.getX(), e1.getY());
+                    if (whichRect == -1) {
+                        newRect = new MyRectF();
+                    } else {
+                        newRect = rects.get(whichRect);
+                        isAjust = true;
+                        isTouched = true;
+                    }
+                } else if (isAjust) {
+                    if (whichPoint == 0) {
+                        pX = e2.getX();
+                        pY = e2.getY();
+                        newRect.left = pX;
+                        newRect.top = pY;
+                    } else if (whichPoint == 1) {
+                        pX = e2.getX();
+                        pY = e2.getY();
+                        newRect.right = pX;
+                        newRect.bottom = pY;
+                    }
                 } else {
-                    newRect = rects.get(whichRect);
-                    isAjust = true;
-                    isTouched = true;
-                }
-            } else if (isAjust) {
-                if (whichPoint == 0) {
                     pX = e2.getX();
                     pY = e2.getY();
-                    newRect.left = pX;
-                    newRect.top = pY;
-                } else if (whichPoint == 1) {
-                    pX = e2.getX();
-                    pY = e2.getY();
-                    newRect.right = pX;
-                    newRect.bottom = pY;
+                    newRect.set(e1.getX(), e1.getY(), e2.getX(), e2.getY());
                 }
-            } else {
-                pX = e2.getX();
-                pY = e2.getY();
-                newRect.set(e1.getX(), e1.getY(), e2.getX(), e2.getY());
+                invalidate();
             }
-            invalidate();
             return false;
         }
 
