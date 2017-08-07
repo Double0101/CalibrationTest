@@ -19,12 +19,12 @@ public class MyRectF extends RectF {
         this.bottom = bottom;
     }
     public boolean isCenter(float x, float y) {
-        return Math.abs((right + left) / 2 - x) < width() / 3
-                && Math.abs((bottom - top) / 2 - y) < height() / 3;
+        return Math.abs((right + left) / 2 - x) < (width() / 3)
+                && Math.abs((bottom + top) / 2 - y) < (height() / 3);
     }
     public int isPointMove(float x, float y) {
-        return (Math.abs(x - this.right) < 20 && Math.abs(y - this.bottom) < 20) ? 1 :
-                (Math.abs(x - this.left) < 20 && Math.abs(y - this.top) < 20) ? 0 : -1;
+        return (Math.abs(x - this.right) < 50 && Math.abs(y - this.bottom) < 50) ? 1 :
+                (Math.abs(x - this.left) < 50 && Math.abs(y - this.top) < 50) ? 0 : -1;
     }
     public void move(float x1, float y1, float x2, float y2) {
         float x = x2 - x1, y = y2 - y1;

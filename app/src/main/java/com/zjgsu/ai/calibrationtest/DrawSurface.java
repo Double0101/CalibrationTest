@@ -27,8 +27,8 @@ import java.util.Calendar;
  * Created by Double on 10/06/2017.
  */
 
-public class DrawSurface extends SurfaceView implements GestureDetector.OnGestureListener {
-    private static final String TAG = "";
+public class DrawSurface extends SurfaceView {
+    private static final String TAG = "Calibration-Click";
     private ArrayList<MyRectF> rects;
 
     private MyRectF newRect;
@@ -79,7 +79,7 @@ public class DrawSurface extends SurfaceView implements GestureDetector.OnGestur
         setZOrderOnTop(true);
         rects = new ArrayList<MyRectF>();
         holder = getHolder();
-        detector = new GestureDetector(this);
+        detector = new GestureDetector(new MyDetector());
         newRect = null;
         holder.setFormat(PixelFormat.TRANSPARENT);
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -170,6 +170,8 @@ public class DrawSurface extends SurfaceView implements GestureDetector.OnGestur
                 canvas.drawRect(rects.get(i), mPaint);
             if (newRect != null) {
                 canvas.drawRect(newRect, cPaint);
+                canvas.drawPoint(newRect.left, newRect.top, rPaint);
+                canvas.drawPoint(newRect.right, newRect.bottom, rPaint);
                 drawMagnifier(pX, pY, canvas);
             }
         }
@@ -248,110 +250,111 @@ public class DrawSurface extends SurfaceView implements GestureDetector.OnGestur
     private void clean() {
         pX = pY = qX = qY = whichRect = whichPoint = -1;
         newRect = null;
-        isMove = isAjust = isTouched = false;
+        isMove = isTouched = false;
+    }
+
+    private MyRectF findRect(float x, float y) {
+        if (inWhichCenter(x, y) != -1)
+            return rects.get(inWhichCenter(x, y));
+        return null;
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         detector.onTouchEvent(event);
+        if (event.getAction() == MotionEvent.ACTION_UP && newRect != null) {
+            if (!isAjust) {
+                rects.add(newRect);
+                clean();
+            } else {
+                clean();
+            }
+            invalidate();
+        }
         return true;
     }
 
-    @Override
-    public boolean onDown(MotionEvent e) {
-        Log.i(TAG, "111");
-            pX = e.getX();
-            pY = e.getY();
-            whichRect = whichAjsut(pX, pY);
-            if (whichRect != -1)
-                isAjust = true;
-            else {
-                whichRect = inWhichCenter(pX, pY);
-                if (whichRect != -1)
-                    isMove = true;
-            }
-            newRect = new MyRectF();
-        return false;
-    }
+    private class MyDetector extends GestureDetector.SimpleOnGestureListener {
 
-    @Override
-    public void onShowPress(MotionEvent e) {
-            Log.i(TAG, "222");
-
-    }
-
-    @Override
-    public boolean onSingleTapUp(MotionEvent e) {
-        Log.i(TAG, "333");
-        clean();
-        return false;
-    }
-
-    @Override
-    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        Log.i(TAG, "^^^");
-        qX = e2.getX();
-        qY = e2.getY();
-        if (whichRect != -1) {
-            newRect = null;
-            newRect = rects.get(whichRect);
-            if (isAjust) {
-                //  移动点
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            Log.i(TAG, "onScroll");
+            if (newRect == null) {
+                whichRect = whichAjsut(e1.getX(), e1.getY());
+                if (whichRect == -1) {
+                    newRect = new MyRectF();
+                } else {
+                    newRect = rects.get(whichRect);
+                    isAjust = true;
+                    isTouched = true;
+                }
+            } else if (isAjust) {
                 if (whichPoint == 0) {
-                    newRect.left = e2.getX();
-                    newRect.top = e2.getY();
-                } else if (whichPoint == 1){
-                    newRect.right = e2.getX();
-                    newRect.bottom = e2.getY();
+                    pX = e2.getX();
+                    pY = e2.getY();
+                    newRect.left = pX;
+                    newRect.top = pY;
+                } else if (whichPoint == 1) {
+                    pX = e2.getX();
+                    pY = e2.getY();
+                    newRect.right = pX;
+                    newRect.bottom = pY;
+                }
+            } else {
+                pX = e2.getX();
+                pY = e2.getY();
+                newRect.set(e1.getX(), e1.getY(), e2.getX(), e2.getY());
+            }
+            invalidate();
+            return false;
+        }
+
+        public boolean onDoubleTap(MotionEvent e) {
+            Log.i(TAG, "Doubletap");
+            if (whichRect != -1)
+                whichRect = -1;
+            else {
+                pX = e.getX();
+                pY = e.getY();
+                whichRect = inWhichCenter(pX, pY);
+                Log.i(TAG, rects.size() + " " + whichRect);
+                if (whichRect != -1)
+                    new AlertDialog.Builder(getContext())
+                            .setTitle("删除该标定区域")
+                            .setMessage("您确定要删除该标定吗？")
+                            .setPositiveButton("是", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+
+                                }
+                            }).setNegativeButton("否", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            whichRect = -1;
+                            dialog.cancel();
+                        }
+                    }).show();
+                else
+                    Toast.makeText(getContext(), "您并没有选择任何标注区域", Toast.LENGTH_SHORT).show();
+                if (whichRect != -1) {
+                    rects.remove(whichRect);
+                    whichRect = -1;
                 }
             }
-            else if (isMove) {
-                //  move
-                newRect.move(pX, pY, qX, qY);
-            }
-        } else {
-            //  画框
-            newRect.set(pX, pY, qX, qY);
+            invalidate();
+            return super.onDoubleTap(e);
         }
-        invalidate();
-        return false;
-    }
 
-    @Override
-    public void onLongPress(MotionEvent e) {
-        Log.i(TAG, "&&&");
-    }
-
-    @Override
-    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-        Log.i(TAG, "###" + velocityX);
-        if (whichRect != -1)
-            rects.remove(whichRect);
-        else {
-            pX = e1.getX();
-            pY = e2.getY();
-            whichRect = whichAjsut(pX, pY);
-            if (whichRect != -1)
-                new AlertDialog.Builder(getContext())
-                        .setTitle("删除该标定区域")
-                        .setMessage("您确定要删除该标定吗？")
-                        .setPositiveButton("是", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                rects.remove(whichRect);
-                                dialog.cancel();
-
-                            }
-                        }).setNegativeButton("否", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                }).show();
-            else
-                Toast.makeText(getContext(), "您并没有选择任何标注区域", Toast.LENGTH_SHORT).show();
+        public boolean onSingleTapConfirmed(MotionEvent e) {
+            Log.i(TAG, "Single");
+            if (!isAjust) {
+                newRect = findRect(e.getX(), e.getY());
+                if (newRect != null)
+                    isAjust = true;
+            } else
+                isAjust = false;
+            invalidate();
+            return super.onSingleTapConfirmed(e);
         }
-        invalidate();
-        return false;
     }
 }
