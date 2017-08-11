@@ -191,10 +191,10 @@ public class DrawSurface extends SurfaceView {
         if (currentRect == null) {
             currentRect = new MyRectF(rect.left, rect.top, rect.right, rect.bottom);
         }
-        rect.right += distanceX;
-        rect.left += distanceX;
-        rect.top += distanceY;
-        rect.bottom += distanceY;
+        rect.right = currentRect.right + distanceX;
+        rect.left = currentRect.left + distanceX;
+        rect.top = currentRect.top + distanceY;
+        rect.bottom = currentRect.bottom + distanceY;
         invalidate();
     }
 
