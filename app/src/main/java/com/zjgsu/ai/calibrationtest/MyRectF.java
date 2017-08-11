@@ -26,11 +26,5 @@ public class MyRectF extends RectF {
         return (Math.abs(x - this.right) < 50 && Math.abs(y - this.bottom) < 50) ? 1 :
                 (Math.abs(x - this.left) < 50 && Math.abs(y - this.top) < 50) ? 0 : -1;
     }
-    public void move(float x1, float y1, float x2, float y2) {
-        float x = x2 - x1, y = y2 - y1;
-        right += x;
-        left += x;
-        top += y;
-        bottom += y;
-    }
+
 }

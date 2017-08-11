@@ -31,6 +31,8 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
     private static final int MODE_AJUST = 2;
     private static final int MODE_MOVE = 3;
 
+    private boolean isInit = true;
+
     private ImageView imageView;
 
     private DrawSurface drawSurface;
@@ -62,18 +64,21 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
     @Override
     public void onWindowFocusChanged(boolean hasWindowFocus) {
         super.onWindowFocusChanged(hasWindowFocus);
-        String path = mCalibration.getPhotoPath();
-        Bitmap bitmap = BitmapFactory.decodeFile(path);
-        imageView.setImageBitmap(bitmap);
-        imageView.setAdjustViewBounds(true);
-        getWH();
-        if (mCalibration.getAreaRects() != null) {
-            ArrayList<MyRectF> rects = new ArrayList<>();
-            for (MyRectF rect : mCalibration.getAreaRects()) {
-                rects.add(new MyRectF(rect.left + mLeft, rect.top + mTop,
-                        rect.right + mRight, rect.bottom + mBottom));
+        if (isInit) {
+            String path = mCalibration.getPhotoPath();
+            Bitmap bitmap = BitmapFactory.decodeFile(path);
+            imageView.setImageBitmap(bitmap);
+            imageView.setAdjustViewBounds(true);
+            getWH();
+            if (mCalibration.getAreaRects() != null) {
+                ArrayList<MyRectF> rects = new ArrayList<>();
+                for (MyRectF rect : mCalibration.getAreaRects()) {
+                    rects.add(new MyRectF(rect.left + mLeft, rect.top + mTop,
+                            rect.right + mLeft, rect.bottom + mTop));
+                }
+                drawSurface.addRects(rects);
             }
-            drawSurface.addRects(rects);
+            isInit = false;
         }
     }
     // 获得imageview的宽高
@@ -111,8 +116,6 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
         return result;
     }
 
-
-
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         detector.onTouchEvent(event);
@@ -137,7 +140,6 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
             Toast.makeText(getContext(), "您并没有选择任何标注区域", Toast.LENGTH_SHORT).show();
             return false;
         }
-        // remove...
         new AlertDialog.Builder(getContext())
                 .setTitle("删除该标定区域")
                 .setMessage("您确定要删除该标定吗？")
