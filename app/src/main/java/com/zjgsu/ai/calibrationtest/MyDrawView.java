@@ -31,7 +31,7 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
     private static final int MODE_AJUST = 2;
     private static final int MODE_MOVE = 3;
 
-    private boolean isInit = true;
+    private boolean isInited = false;
 
     private ImageView imageView;
 
@@ -64,7 +64,7 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
     @Override
     public void onWindowFocusChanged(boolean hasWindowFocus) {
         super.onWindowFocusChanged(hasWindowFocus);
-        if (isInit) {
+        if (!isInited) {
             String path = mCalibration.getPhotoPath();
             Bitmap bitmap = BitmapFactory.decodeFile(path);
             imageView.setImageBitmap(bitmap);
@@ -78,7 +78,7 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
                 }
                 drawSurface.addRects(rects);
             }
-            isInit = false;
+            isInited = true;
         }
     }
     // 获得imageview的宽高
@@ -128,11 +128,6 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
     }
 
     @Override
-    public boolean onSingleTapConfirmed(MotionEvent e) {
-        return false;
-    }
-
-    @Override
     public boolean onDoubleTap(MotionEvent e) {
         float eX = e.getX(), eY = e.getY();
         final int which = drawSurface.getRect(eX, eY);
@@ -156,27 +151,6 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
             }
         }).show();
 
-        return false;
-    }
-
-    @Override
-    public boolean onDoubleTapEvent(MotionEvent e) {
-
-        return false;
-    }
-
-    @Override
-    public boolean onDown(MotionEvent e) {
-        return false;
-    }
-
-    @Override
-    public void onShowPress(MotionEvent e) {
-
-    }
-
-    @Override
-    public boolean onSingleTapUp(MotionEvent e) {
         return false;
     }
 
@@ -208,10 +182,36 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
                     drawSurface.moveRect(rectNum[0], e1.getX(), e1.getY(), e2.getX(), e2.getY());
                     break;
                 default:
-                    // 可能currentMode没有重制
+                    drawSurface.clear();
                     break;
             }
         }
+        return false;
+    }
+
+    @Override
+    public boolean onDoubleTapEvent(MotionEvent e) {
+
+        return false;
+    }
+
+    @Override
+    public boolean onDown(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent e) {
+
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent e) {
+        return false;
+    }
+
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent e) {
         return false;
     }
 
