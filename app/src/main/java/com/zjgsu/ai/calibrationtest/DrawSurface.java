@@ -18,6 +18,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.SurfaceHolder;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -29,47 +30,29 @@ import java.util.ArrayList;
 
 public class DrawSurface extends SurfaceView {
     private static final String TAG = "Calibration-Click";
-    public ArrayList<MyRectF> mRects;
+    private ArrayList<MyRectF> myRects;
 
-    private MyRectF newRect;
+    private MyRectF currentRect;
+    private MyRectF copyRect;
 
-    private float aW;
-    private float aH;
 
-    private float bW;
-    private float bH;
-
-    private Paint mPaint;   //  框的paint
-    private Paint cPaint;   //  现在画的框的paint
-    private Paint magnifierPaint;
-    private Paint pPaint;   //  放大镜的准星&矩形框的删除点
-    private Paint rPaint;   //  矩形框的移动点
-    private Paint linePaint;    //  放大镜的线
+    private Paint[] mPaints;
 
     private int magnifierRadius;
 
     private ImageView imageView;
-    private GestureDetector detector;
 
+    private boolean isInited = false;
     private boolean isTouched = false;
-    private boolean isAjust = false;
-    private boolean isMove = false;
 
     private Bitmap bitmap;
     private BitmapShader shader;
     private Matrix matrix;
 
-    private int t = 0;
-    private int whichRect = -1;
-    private int whichPoint = -1;
-
     private float multiple;
 
-    private float qX;
-    private float qY;
-
-    private float pX;
-    private float pY;
+    private float currentX;
+    private float currentY;
 
     private SurfaceHolder holder;
 
@@ -77,10 +60,10 @@ public class DrawSurface extends SurfaceView {
         super(context, attrs);
         setWillNotDraw(false);
         setZOrderOnTop(true);
-        mRects = new ArrayList<MyRectF>();
+        myRects = new ArrayList<MyRectF>();
         holder = getHolder();
-        detector = new GestureDetector(new MyDetector());
-        newRect = null;
+
+        currentRect = null;
         holder.setFormat(PixelFormat.TRANSPARENT);
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         initPaint();
@@ -94,63 +77,39 @@ public class DrawSurface extends SurfaceView {
     }
 
     private void initPaint() {
-        magnifierPaint = new Paint();
-
-        mPaint = new Paint();
-        mPaint.setColor(Color.GREEN);
-        mPaint.setStyle(Paint.Style.STROKE);
-        mPaint.setStrokeWidth(5f);
-        mPaint.setAlpha(200);
-
-        cPaint = new Paint();
-        cPaint.setColor(Color.YELLOW);
-        cPaint.setStyle(Paint.Style.STROKE);
-        cPaint.setStrokeWidth(8f);
-        cPaint.setAlpha(200);
-
-        pPaint = new Paint();
-        pPaint.setColor(Color.RED);
-        pPaint.setStrokeWidth(15f);
-
-        rPaint = new Paint();
-        rPaint.setColor(Color.BLUE);
-        rPaint.setStrokeWidth(15f);
-
-        linePaint = new Paint();
-        linePaint.setColor(Color.BLACK);
-        linePaint.setStyle(Paint.Style.STROKE);
-        linePaint.setStrokeWidth(4f);
-    }
-
-    /**
-     * 判断点是否在屏幕中的图片区域
-     *
-     * @param x
-     * @param y
-     * @return
-     */
-    private boolean isInArea(float x, float y) {
-        return (x > aW && x < bW && y > aH && y < bH);
+        mPaints  = new Paint[6];
+        mPaints[0] = new Paint();
+        mPaints[0].setColor(Color.GREEN);
+        mPaints[0].setStyle(Paint.Style.STROKE);
+        mPaints[0].setStrokeWidth(5f);
+        mPaints[0].setAlpha(200);
+        mPaints[1] = new Paint();
+        mPaints[1].setColor(Color.YELLOW);
+        mPaints[1].setStyle(Paint.Style.STROKE);
+        mPaints[1].setStrokeWidth(8f);
+        mPaints[1].setAlpha(200);
+        mPaints[2] = new Paint();
+        mPaints[3] = new Paint();
+        mPaints[3].setColor(Color.RED);
+        mPaints[3].setStrokeWidth(15f);
+        mPaints[4] = new Paint();
+        mPaints[4].setColor(Color.BLUE);
+        mPaints[4].setStrokeWidth(15f);
+        mPaints[5] = new Paint();
+        mPaints[5].setColor(Color.BLACK);
+        mPaints[5].setStyle(Paint.Style.STROKE);
+        mPaints[5].setStrokeWidth(4f);
     }
 
     public MyRectF[] getRects() {
-        MyRectF[] giveRect = new MyRectF[mRects.size()];
-        for (int i = 0; i < mRects.size(); ++i)
+        MyRectF[] giveRect = new MyRectF[myRects.size()];
+        for (int i = 0; i < myRects.size(); ++i)
             giveRect[i] = new MyRectF(
-                    mRects.get(i).left - aW,
-                    mRects.get(i).top - aH,
-                    mRects.get(i).right - aW,
-                    mRects.get(i).bottom - aH);
-
+                    myRects.get(i).left,
+                    myRects.get(i).top,
+                    myRects.get(i).right,
+                    myRects.get(i).bottom);
         return giveRect;
-    }
-
-    public void setRects(MyRectF[] rectList) {
-        this.mRects = new ArrayList<MyRectF>();
-        for (int i = 0; i < rectList.length; ++i)
-            mRects.add(
-                    new MyRectF(rectList[i].left + aW, rectList[i].top + aH,
-                            rectList[i].right + aW, rectList[i].bottom + aH));
     }
 
     /**
@@ -165,26 +124,26 @@ public class DrawSurface extends SurfaceView {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (mRects != null) {
-            for (int i = 0; i < mRects.size(); ++i)
-                canvas.drawRect(mRects.get(i), mPaint);
-            if (newRect != null) {
-                canvas.drawRect(newRect, cPaint);
-                canvas.drawPoint(newRect.left, newRect.top, rPaint);
-                canvas.drawPoint(newRect.right, newRect.bottom, rPaint);
-                drawMagnifier(pX, pY, canvas);
+        if (myRects != null) {
+            for (int i = 0; i < myRects.size(); ++i)
+                canvas.drawRect(myRects.get(i), mPaints[0]);
+            if (currentRect != null) {
+                canvas.drawRect(currentRect, mPaints[1]);
+                canvas.drawPoint(currentRect.left, currentRect.top, mPaints[4]);
+                canvas.drawPoint(currentRect.right, currentRect.bottom, mPaints[4]);
+                drawMagnifier(currentX, currentY, canvas);
             }
         }
     }
 
     private void drawMagnifier(float x, float y, Canvas canvas) {
-        if (t == 0) {
-            t = 1;
+        if (!isInited) {
+            isInited = true;
             imageView.buildDrawingCache();
             bitmap = imageView.getDrawingCache();
             shader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
             // 为Paint添加shader
-            magnifierPaint.setShader(shader);
+            mPaints[2].setShader(shader);
         }
         if (isTouched) {
             matrix.reset();
@@ -192,173 +151,92 @@ public class DrawSurface extends SurfaceView {
                 matrix.postTranslate(0, -magnifierRadius);
             else
                 matrix.postScale(multiple, multiple, x, y + magnifierRadius / (multiple - 1));
-            magnifierPaint.getShader().setLocalMatrix(matrix);
-            canvas.drawCircle(x, y - magnifierRadius, magnifierRadius, magnifierPaint);
-            canvas.drawLine(x - magnifierRadius, y - magnifierRadius, x + magnifierRadius, y - magnifierRadius, linePaint);
-            canvas.drawLine(x, y - 2 * magnifierRadius, x, y, linePaint);
-            canvas.drawPoint(x, y - magnifierRadius, pPaint);
+            mPaints[2].getShader().setLocalMatrix(matrix);
+            canvas.drawCircle(x, y - magnifierRadius, magnifierRadius, mPaints[2]);
+            canvas.drawLine(x - magnifierRadius, y - magnifierRadius, x + magnifierRadius, y - magnifierRadius, mPaints[5]);
+            canvas.drawLine(x, y - 2 * magnifierRadius, x, y, mPaints[5]);
+            canvas.drawPoint(x, y - magnifierRadius, mPaints[3]);
         }
     }
 
-    /**
-     * 通过父类容器调用
-     * 得到图片的留白的点的位置
-     *
-     * @param bdW
-     * @param bdH
-     * @param lW
-     * @param lH
-     */
-    public void setWH(float bdW, float bdH, float lW, float lH) {
-        aW = bdW;
-        aH = bdH;
-        bW = lW;
-        bH = lH;
-    }
-
-    /**
-     * 判断触点在哪个框的两个点周围
-     * 随后可以对这个框的大小进行调整
-     *
-     * @param x
-     * @param y
-     * @return
-     */
-    public int whichAjsut(float x, float y) {
-        for (int i = 0; i < mRects.size(); i++) {
-            whichPoint = mRects.get(i).isPointMove(x, y);
-            if (whichPoint != -1)
-                return i;
-        }
-        return -1;
-    }
-
-    /**
-     * 判断触点在哪个框的中央
-     *
-     * @param x
-     * @param y
-     * @return
-     */
-    public int inWhichCenter(float x, float y) {
-        for (int i = 0; i < mRects.size(); i++)
-            if (mRects.get(i).isCenter(x, y))
-                return i;
-        return -1;
-    }
-
-    private void clean() {
-        pX = pY = qX = qY = whichRect = whichPoint = -1;
-        newRect = null;
-        isMove = isTouched = false;
-    }
-
-    private MyRectF findRect(float x, float y) {
-        if (inWhichCenter(x, y) != -1)
-            return mRects.get(inWhichCenter(x, y));
-        return null;
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        detector.onTouchEvent(event);
-        if (event.getAction() == MotionEvent.ACTION_UP && newRect != null) {
-            if (!isAjust) {
-                mRects.add(newRect);
-                clean();
+    public void drawRect(int[] rectInfo, float l, float t, float r, float b) {
+        if (rectInfo[0] < myRects.size()) {
+            currentRect = myRects.get(rectInfo[0]);
+            currentX = r;
+            currentY = b;
+            isTouched = true;
+            if (rectInfo[1] == 0) {
+                currentRect.left = r;
+                currentRect.top = b;
             } else {
-                clean();
+                currentRect.right = r;
+                currentRect.bottom = b;
             }
-            invalidate();
+        } else if (rectInfo[0] == myRects.size()) {
+            addRect(new MyRectF(l, t, r, b));
         }
-        return true;
+        invalidate();
     }
 
-    private class MyDetector extends GestureDetector.SimpleOnGestureListener {
-
-        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-            if (isInArea(e1.getX(), e1.getY()) && isInArea(e2.getX(), e2.getY())) {
-                Log.i(TAG, "onScroll");
-                if (newRect == null) {
-                    whichRect = whichAjsut(e1.getX(), e1.getY());
-                    if (whichRect == -1) {
-                        newRect = new MyRectF();
-                    } else {
-                        newRect = mRects.get(whichRect);
-                        isAjust = true;
-                        isTouched = true;
-                    }
-                } else if (isAjust) {
-                    if (whichPoint == 0) {
-                        pX = e2.getX();
-                        pY = e2.getY();
-                        newRect.left = pX;
-                        newRect.top = pY;
-                    } else if (whichPoint == 1) {
-                        pX = e2.getX();
-                        pY = e2.getY();
-                        newRect.right = pX;
-                        newRect.bottom = pY;
-                    }
-                } else {
-                    pX = e2.getX();
-                    pY = e2.getY();
-                    newRect.set(e1.getX(), e1.getY(), e2.getX(), e2.getY());
-                }
-                invalidate();
-            }
-            return false;
+    public void moveRect(int index, float x1, float y1, float x2, float y2) {
+        currentRect = myRects.get(index);
+        float distanceX = x2 - x1, distanceY = y2 - y1;
+        if (copyRect == null) {
+            copyRect = new MyRectF(currentRect.left, currentRect.top, currentRect.right, currentRect.bottom);
         }
-
-        public boolean onDoubleTap(MotionEvent e) {
-            Log.i(TAG, "Doubletap");
-            if (whichRect != -1)
-                whichRect = -1;
-            else {
-                pX = e.getX();
-                pY = e.getY();
-                whichRect = inWhichCenter(pX, pY);
-                Log.i(TAG, mRects.size() + " " + whichRect);
-                if (whichRect != -1)
-                    new AlertDialog.Builder(getContext())
-                            .setTitle("删除该标定区域")
-                            .setMessage("您确定要删除该标定吗？")
-                            .setPositiveButton("是", new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    dialog.cancel();
-                                    Log.i(TAG, mRects.size() + " " + whichRect);
-                                    mRects.remove(whichRect);
-                                }
-                            }).setNegativeButton("否", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            whichRect = -1;
-                            dialog.cancel();
-                        }
-                    }).show();
-                else
-                    Toast.makeText(getContext(), "您并没有选择任何标注区域", Toast.LENGTH_SHORT).show();
-                Log.i(TAG, mRects.size() + " " + whichRect);
-//                if (whichRect != -1) {
-//
-//                    whichRect = -1;
-//                }
-            }
-            invalidate();
-            return super.onDoubleTap(e);
-        }
-
-        public boolean onSingleTapConfirmed(MotionEvent e) {
-            Log.i(TAG, "Single");
-            if (!isAjust) {
-                newRect = findRect(e.getX(), e.getY());
-                if (newRect != null)
-                    isAjust = true;
-            } else
-                isAjust = false;
-            invalidate();
-            return super.onSingleTapConfirmed(e);
-        }
+        currentRect.right = copyRect.right + distanceX;
+        currentRect.left = copyRect.left + distanceX;
+        currentRect.top = copyRect.top + distanceY;
+        currentRect.bottom = copyRect.bottom + distanceY;
+        invalidate();
     }
+
+    public void removeRect(int which) {
+        myRects.remove(which);
+        invalidate();
+    }
+
+    public void addRect(MyRectF rectF) {
+        myRects.add(rectF);
+        invalidate();
+    }
+
+    public void addRects(ArrayList<MyRectF> rects) {
+        myRects = rects;
+        invalidate();
+    }
+
+    public void clear() {
+        currentRect = null;
+        copyRect = null;
+        isTouched = false;
+        currentX = -1;
+        currentY = -1;
+        invalidate();
+    }
+
+    public int getSize() {
+        return myRects.size();
+    }
+
+    public int getRect(float x, float y) {
+        for (int i = 0; i < myRects.size(); ++i)
+            if (myRects.get(i).isCenter(x, y))
+                return i;
+        return -1;
+    }
+
+    public int[] getAjust(float x, float y) {
+        int[] result = {-1, -1};
+        for (MyRectF rect : myRects) {
+            result[1] = rect.isPointMove(x, y);
+            if (result[1] != -1) {
+                result[0] = myRects.indexOf(rect);
+                break;
+            }
+        }
+        return result;
+    }
+
+
 }
