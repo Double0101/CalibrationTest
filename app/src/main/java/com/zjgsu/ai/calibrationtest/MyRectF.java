@@ -8,15 +8,34 @@ import android.graphics.RectF;
 
 public class MyRectF extends RectF {
 
+    private float centerX;
+    private float centerY;
+
     public MyRectF(float left, float top, float right, float bottom) {
         super(left, top, right, bottom);
+        centerX = (left + right) / 2;
+        centerY = (top + bottom) / 2;
     }
-    public MyRectF() {}
     public void set(float left, float top, float right, float bottom) {
         this.left = left;
         this.top = top;
         this.right = right;
         this.bottom = bottom;
+    }
+    public void setTopAndLeft() {
+
+    }
+    public void setTopAndRight() {
+
+    }
+    public void setBottomAndLeft() {
+
+    }
+    public void setBottomAndRight() {
+
+    }
+    public void move() {
+
     }
     public boolean isCenter(float x, float y) {
         return Math.abs((right + left) / 2 - x) < (width() / 3)

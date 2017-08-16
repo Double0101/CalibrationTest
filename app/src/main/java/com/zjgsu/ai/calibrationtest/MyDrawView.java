@@ -43,7 +43,7 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
 
     private Context mContext;
 
-    private int[] rectNum = {-1, -1};
+    private RectInfo rectInfo;
 
     private float mLeft, mRight, mTop, mBottom;
 
@@ -52,6 +52,7 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
         LayoutInflater.from(context).inflate(R.layout.my_draw_view, this);
         detector = new GestureDetector(this);
         mContext = context;
+        rectInfo = new RectInfo();
         imageView = (ImageView) findViewById(R.id.myImageView);
         drawSurface = (DrawSurface) findViewById(R.id.myDrawImage);
         drawSurface.setImageView(imageView);
@@ -76,7 +77,7 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
                     rects.add(new MyRectF(rect.left + mLeft, rect.top + mTop,
                             rect.right + mLeft, rect.bottom + mTop));
                 }
-                drawSurface.addRects(rects);
+                drawSurface.setRects(rects);
             }
             isInited = true;
         }
@@ -121,7 +122,7 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
         detector.onTouchEvent(event);
         if (event.getAction() == MotionEvent.ACTION_UP) {
             currentMode = 0;
-            rectNum[1] = rectNum[0] = -1;
+            rectInfo.reset();
             drawSurface.clear();
         }
         return true;
@@ -159,15 +160,15 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
         float eL = e1.getX(), eT = e1.getY(), eR = e2.getX(), eB = e2.getY();
         if (eL > mLeft && eL < mRight && eT > mTop && eT < mBottom
                 && eR > mLeft && eR < mRight && eB > mTop && eB < mBottom) {
-            if (rectNum[0] == -1) {
-                rectNum[0] = drawSurface.getRect(eL, eT);
-                if (rectNum[0] == -1) {
-                    rectNum = drawSurface.getAjust(eL, eT);
-                    if (rectNum[0] != -1) {
+            if (rectInfo.getRectNum() == -1) {
+                rectInfo.setRectNum(drawSurface.getRect(eL, eT));
+                if (rectInfo.getRectNum() == -1) {
+                    rectInfo = drawSurface.getAjust(eL, eT);
+                    if (rectInfo.getRectNum() != -1) {
                         currentMode = MODE_AJUST;
                     } else {
                         currentMode = MODE_DRAW;
-                        rectNum[0] = drawSurface.getSize();
+                        rectInfo.setRectNum(drawSurface.getSize());
                     }
                 } else {
                     currentMode = MODE_MOVE;
@@ -176,10 +177,10 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
             switch (currentMode) {
                 case MODE_DRAW:
                 case MODE_AJUST:
-                    drawSurface.drawRect(rectNum, e1.getX(), e1.getY(), e2.getX(), e2.getY());
+                    drawSurface.drawRect(rectInfo, e1.getX(), e1.getY(), e2.getX(), e2.getY());
                     break;
                 case MODE_MOVE:
-                    drawSurface.moveRect(rectNum[0], e1.getX(), e1.getY(), e2.getX(), e2.getY());
+                    drawSurface.moveRect(rectInfo.getRectNum(), e1.getX(), e1.getY(), e2.getX(), e2.getY());
                     break;
                 default:
                     drawSurface.clear();

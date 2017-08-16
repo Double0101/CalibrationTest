@@ -35,7 +35,6 @@ public class DrawSurface extends SurfaceView {
     private MyRectF currentRect;
     private MyRectF copyRect;
 
-
     private Paint[] mPaints;
 
     private int magnifierRadius;
@@ -68,7 +67,7 @@ public class DrawSurface extends SurfaceView {
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         initPaint();
         multiple = 2f;
-        magnifierRadius = 250;
+        magnifierRadius = 200;
         matrix = new Matrix();
     }
 
@@ -112,11 +111,6 @@ public class DrawSurface extends SurfaceView {
         return giveRect;
     }
 
-    /**
-     * 改变放大镜的放大倍数
-     *
-     * @param multiple
-     */
     public void setMultiple(float multiple) {
         this.multiple = multiple;
     }
@@ -142,37 +136,38 @@ public class DrawSurface extends SurfaceView {
             imageView.buildDrawingCache();
             bitmap = imageView.getDrawingCache();
             shader = new BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
-            // 为Paint添加shader
             mPaints[2].setShader(shader);
         }
         if (isTouched) {
             matrix.reset();
-            if (multiple == 1)
-                matrix.postTranslate(0, -magnifierRadius);
-            else
-                matrix.postScale(multiple, multiple, x, y + magnifierRadius / (multiple - 1));
+            if (multiple == 1) matrix.postTranslate(0, -magnifierRadius);
+            else matrix.postScale(multiple, multiple, x, y + magnifierRadius / (multiple - 1));
             mPaints[2].getShader().setLocalMatrix(matrix);
             canvas.drawCircle(x, y - magnifierRadius, magnifierRadius, mPaints[2]);
-            canvas.drawLine(x - magnifierRadius, y - magnifierRadius, x + magnifierRadius, y - magnifierRadius, mPaints[5]);
-            canvas.drawLine(x, y - 2 * magnifierRadius, x, y, mPaints[5]);
-            canvas.drawPoint(x, y - magnifierRadius, mPaints[3]);
+            drawSight(x, y, canvas);
         }
     }
 
-    public void drawRect(int[] rectInfo, float l, float t, float r, float b) {
-        if (rectInfo[0] < myRects.size()) {
-            currentRect = myRects.get(rectInfo[0]);
+    private void drawSight(float x, float y, Canvas canvas) {
+        canvas.drawLine(x - magnifierRadius, y - magnifierRadius, x + magnifierRadius, y - magnifierRadius, mPaints[5]);
+        canvas.drawLine(x, y - 2 * magnifierRadius, x, y, mPaints[5]);
+        canvas.drawPoint(x, y - magnifierRadius, mPaints[3]);
+    }
+
+    public void drawRect(RectInfo rectInfo, float l, float t, float r, float b) {
+        if (rectInfo.getRectNum() < myRects.size()) {
+            currentRect = myRects.get(rectInfo.getRectNum());
             currentX = r;
             currentY = b;
             isTouched = true;
-            if (rectInfo[1] == 0) {
-                currentRect.left = r;
-                currentRect.top = b;
+            if (rectInfo.getPointNum() == 0) {
+                currentRect.left = currentX;
+                currentRect.top = currentY;
             } else {
-                currentRect.right = r;
-                currentRect.bottom = b;
+                currentRect.right = currentX;
+                currentRect.bottom = currentY;
             }
-        } else if (rectInfo[0] == myRects.size()) {
+        } else if (rectInfo.getRectNum() == myRects.size()) {
             addRect(new MyRectF(l, t, r, b));
         }
         invalidate();
@@ -201,12 +196,15 @@ public class DrawSurface extends SurfaceView {
         invalidate();
     }
 
-    public void addRects(ArrayList<MyRectF> rects) {
+    public void setRects(ArrayList<MyRectF> rects) {
         myRects = rects;
         invalidate();
     }
 
     public void clear() {
+        if (currentRect.height() < 50 || currentRect.width() < 50) {
+            myRects.remove(currentRect);
+        }
         currentRect = null;
         copyRect = null;
         isTouched = false;
@@ -226,12 +224,12 @@ public class DrawSurface extends SurfaceView {
         return -1;
     }
 
-    public int[] getAjust(float x, float y) {
-        int[] result = {-1, -1};
+    public RectInfo getAjust(float x, float y) {
+        RectInfo result = new RectInfo();
         for (MyRectF rect : myRects) {
-            result[1] = rect.isPointMove(x, y);
-            if (result[1] != -1) {
-                result[0] = myRects.indexOf(rect);
+            result.setPointNum(rect.isPointMove(x, y));
+            if (result.getPointNum() != -1) {
+                result.setRectNum(myRects.indexOf(rect));
                 break;
             }
         }
