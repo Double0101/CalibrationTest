@@ -21,7 +21,7 @@ import java.util.ArrayList;
  */
 
 public class DrawSurface extends SurfaceView {
-    private static final String TAG = "Calibration-Click";
+    private static final String TAG = "AnnotatedImage-Click";
     private ArrayList<MyRectF> myRects;
 
     private MyRectF currentRect;

@@ -23,8 +23,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name="com.zjgsu.ai.calibrationtest.CaliPreActivity" />
-        <activity android:name="com.zjgsu.ai.calibrationtest.CalibrationActivity" />
+        <activity android:name="com.zjgsu.ai.calibrationtest.AnnotatePreActivity" />
+        <activity android:name="com.zjgsu.ai.calibrationtest.AnnotationActivity" />
     </application>
 
 </manifest>

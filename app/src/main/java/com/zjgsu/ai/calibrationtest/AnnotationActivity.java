@@ -16,7 +16,7 @@ import android.view.Window;
  * Created by Double on 2017/4/26.
  */
 
-public class CalibrationActivity extends AppCompatActivity {
+public class AnnotationActivity extends AppCompatActivity {
 
     private MyDrawView myDrawView;
 
@@ -26,19 +26,19 @@ public class CalibrationActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        setContentView(R.layout.activity_calibration);
+        setContentView(R.layout.activity_annotation);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.calibrationTool);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.annotationTool);
         setSupportActionBar(toolbar);
 
-        myDrawView = (MyDrawView) findViewById(R.id.calibrationView);
+        myDrawView = (MyDrawView) findViewById(R.id.annotationView);
         Intent intent = getIntent();
         index = intent.getIntExtra("index", 0);
         myDrawView.setIndex(index);
     }
 
     public void touchFinish(View view) {
-        CalibrationLab.get(getApplication()).getCalibrations()
+        AnnotationLab.get(getApplication()).getAnnotatedImages()
                 .get(index).setArea(new Area(myDrawView.getRects()));
         finish();
     }
@@ -46,7 +46,7 @@ public class CalibrationActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.calibration_menu, menu);
+        inflater.inflate(R.menu.annotation_menu, menu);
 
         return super.onCreateOptionsMenu(menu);
     }

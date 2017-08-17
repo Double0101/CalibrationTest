@@ -9,7 +9,7 @@ import org.json.JSONObject;
  * Created by Double on 2017/4/24.
  */
 
-public class Calibration {
+public class AnnotatedImage {
 
     private static final String JSON_CATEGORY = "category";
     private static final String JSON_AREA = "area";
@@ -25,12 +25,12 @@ public class Calibration {
         return category;
     }
 
-    public Calibration(String category, String path) {
+    public AnnotatedImage(String category, String path) {
         this.category = category;
         this.src = new Photo(path);
     }
 
-    public Calibration(JSONObject json) throws JSONException {
+    public AnnotatedImage(JSONObject json) throws JSONException {
         category = json.getString(JSON_CATEGORY);
         src = new Photo(json.getJSONObject(JSON_PHOTO));
         if (json.has(JSON_AREA))

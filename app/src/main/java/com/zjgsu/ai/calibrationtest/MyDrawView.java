@@ -9,11 +9,9 @@ import android.graphics.Matrix;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
-import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
@@ -37,7 +35,7 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
 
     private DrawSurface drawSurface;
 
-    private Calibration mCalibration;
+    private AnnotatedImage mAnnotatedImage;
 
     private GestureDetector detector;
 
@@ -59,21 +57,21 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
     }
 
     public void setIndex(int index) {
-        mCalibration = CalibrationLab.get(mContext).getCalibrations().get(index);
+        mAnnotatedImage = AnnotationLab.get(mContext).getAnnotatedImages().get(index);
     }
 
     @Override
     public void onWindowFocusChanged(boolean hasWindowFocus) {
         super.onWindowFocusChanged(hasWindowFocus);
         if (!isInited) {
-            String path = mCalibration.getPhotoPath();
+            String path = mAnnotatedImage.getPhotoPath();
             Bitmap bitmap = BitmapFactory.decodeFile(path);
             imageView.setImageBitmap(bitmap);
             imageView.setAdjustViewBounds(true);
             getBound();
-            if (mCalibration.getAreaRects() != null) {
+            if (mAnnotatedImage.getAreaRects() != null) {
                 ArrayList<MyRectF> rects = new ArrayList<>();
-                for (MyRectF rect : mCalibration.getAreaRects()) {
+                for (MyRectF rect : mAnnotatedImage.getAreaRects()) {
                     rects.add(new MyRectF(rect.left + boundA.getX(), rect.top + boundA.getY(),
                             rect.right + boundA.getX(), rect.bottom + boundA.getY()));
                 }

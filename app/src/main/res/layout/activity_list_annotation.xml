@@ -15,7 +15,7 @@
         app:popupTheme="@style/AppTheme.PopupOverlay"/>
 
     <ListView
-        android:id="@+id/calibrationlist"
+        android:id="@+id/annotationlist"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 

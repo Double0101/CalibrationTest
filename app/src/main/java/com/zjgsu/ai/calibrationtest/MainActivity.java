@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -21,27 +20,27 @@ public class MainActivity extends AppCompatActivity {
 
     private ListView listView;
 
-    private ArrayList<Calibration> mCalibrations;
+    private ArrayList<AnnotatedImage> mAnnotatedImages;
 
-    private ArrayAdapter<Calibration> adapter;
+    private ArrayAdapter<AnnotatedImage> adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_list_calibration);
-        mCalibrations = CalibrationLab.get(this).getCalibrations();
+        setContentView(R.layout.activity_list_annotation);
+        mAnnotatedImages = AnnotationLab.get(this).getAnnotatedImages();
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        listView = (ListView) findViewById(R.id.calibrationlist);
+        listView = (ListView) findViewById(R.id.annotationlist);
 
-        adapter = new ArrayAdapter<Calibration>(this,
-                android.R.layout.simple_list_item_1, mCalibrations);
+        adapter = new ArrayAdapter<AnnotatedImage>(this,
+                android.R.layout.simple_list_item_1, mAnnotatedImages);
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(MainActivity.this, CalibrationActivity.class);
+                Intent intent = new Intent(MainActivity.this, AnnotationActivity.class);
                 intent.putExtra("index", position);
                 startActivityForResult(intent, 2);
             }
@@ -57,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.calibration_list_menu, menu);
+        inflater.inflate(R.menu.annotation_list_menu, menu);
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -65,14 +64,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        CalibrationLab.get(this).saveCalibrations();
+        AnnotationLab.get(this).saveAnnotations();
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_add_button:
-                Intent intent = new Intent(MainActivity.this, CaliPreActivity.class);
+                Intent intent = new Intent(MainActivity.this, AnnotatePreActivity.class);
                 startActivity(intent);
 
                 return true;

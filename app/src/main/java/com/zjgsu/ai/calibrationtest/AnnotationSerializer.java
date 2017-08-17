@@ -20,18 +20,18 @@ import java.util.ArrayList;
  * Created by Double on 2017/4/25.
  */
 
-public class CalibrationSerializer {
+public class AnnotationSerializer {
 
     private Context mContext;
     private String mFilename;
 
-    public CalibrationSerializer(Context c, String f) {
+    public AnnotationSerializer(Context c, String f) {
         mContext = c;
         mFilename = f;
     }
 
-    public ArrayList<Calibration> loadCalibration() throws IOException, JSONException {
-        ArrayList<Calibration> calibrations = new ArrayList<Calibration>();
+    public ArrayList<AnnotatedImage> loadAnnotations() throws IOException, JSONException {
+        ArrayList<AnnotatedImage> annotatedImages = new ArrayList<AnnotatedImage>();
         BufferedReader reader = null;
         try {
             InputStream in = mContext.openFileInput(mFilename);
@@ -42,7 +42,7 @@ public class CalibrationSerializer {
                 jsonString.append(line);
             JSONArray array = (JSONArray) new JSONTokener(jsonString.toString()).nextValue();
             for (int i = 0; i < array.length(); i++) {
-                calibrations.add(new Calibration(array.getJSONObject(i)));
+                annotatedImages.add(new AnnotatedImage(array.getJSONObject(i)));
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -51,12 +51,12 @@ public class CalibrationSerializer {
                 reader.close();
         }
 
-        return calibrations;
+        return annotatedImages;
     }
 
-    public void saveCalibrations(ArrayList<Calibration> calibrations) throws JSONException, IOException{
+    public void saveAnnotations(ArrayList<AnnotatedImage> annotatedImages) throws JSONException, IOException{
         JSONArray array = new JSONArray();
-        for (Calibration c : calibrations)
+        for (AnnotatedImage c : annotatedImages)
             array.put(c.toJSON());
 
         Writer writer = null;

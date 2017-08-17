@@ -21,7 +21,7 @@ import java.io.FileNotFoundException;
  * Created by Double on 2017/4/25.
  */
 
-public class CaliPreActivity extends AppCompatActivity{
+public class AnnotatePreActivity extends AppCompatActivity{
     private ImageView imageView;
     private EditText editText;
     private Button button1;
@@ -33,7 +33,7 @@ public class CaliPreActivity extends AppCompatActivity{
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_cali_pre);
+        setContentView(R.layout.activity_anno_pre);
         path = null;
 
         imageView = (ImageView) findViewById(R.id.imageView);
@@ -55,7 +55,7 @@ public class CaliPreActivity extends AppCompatActivity{
             public void onClick(View v) {
                 category = editText.getText().toString();
                 if (path != null && category != null) {
-                    CalibrationLab.get(getApplication()).addCalibration(new Calibration(category, path));
+                    AnnotationLab.get(getApplication()).addAnnotation(new AnnotatedImage(category, path));
                     finish();
                 }
             }
@@ -65,7 +65,7 @@ public class CaliPreActivity extends AppCompatActivity{
         button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                CaliPreActivity.this.finish();
+                AnnotatePreActivity.this.finish();
             }
         });
     }
