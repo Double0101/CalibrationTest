@@ -142,6 +142,16 @@ public class DrawSurface extends SurfaceView {
     private void drawSight(MyPoint point, Canvas canvas) {
         canvas.drawLine(point.getX() - magnifierRadius, point.getY() - magnifierRadius, point.getX() + magnifierRadius, point.getY() - magnifierRadius, mPaints[5]);
         canvas.drawLine(point.getX(), point.getY() - 2 * magnifierRadius, point.getX(), point.getY(), mPaints[5]);
+        if (currentPoint.getY() > currentRect.getCenter().getY()) {
+            canvas.drawLine(point.getX(), point.getY() - 2 * magnifierRadius, point.getX(), point.getY() - magnifierRadius, mPaints[1]);
+        } else {
+            canvas.drawLine(point.getX(), point.getY() - magnifierRadius, point.getX(), point.getY(), mPaints[1]);
+        }
+        if (currentPoint.getX() > currentRect.getCenter().getX()) {
+            canvas.drawLine(point.getX() - magnifierRadius, point.getY() - magnifierRadius, point.getX(), point.getY() - magnifierRadius, mPaints[1]);
+        } else {
+            canvas.drawLine(point.getX(), point.getY() - magnifierRadius, point.getX() + magnifierRadius, point.getY() - magnifierRadius, mPaints[1]);
+        }
         canvas.drawPoint(point.getX(), point.getY() - magnifierRadius, mPaints[3]);
     }
 
@@ -180,7 +190,7 @@ public class DrawSurface extends SurfaceView {
     }
 
     public void clear() {
-        if (currentRect != null && (currentRect.height() < 50 || currentRect.width() < 50)) {
+        if (currentRect != null && (currentRect.height() < 20 || currentRect.width() < 20)) {
             myRects.remove(currentRect);
         }
         if (currentPoint != null) {

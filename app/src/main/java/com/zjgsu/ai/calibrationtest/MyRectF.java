@@ -66,6 +66,10 @@ public class MyRectF extends RectF {
         setCenter();
     }
 
+    public MyPoint getCenter() {
+        return centerPoint;
+    }
+
     private void setCenter() {
         centerPoint.setX((right + left) / 2);
         centerPoint.setY((top + bottom) / 2);
@@ -78,15 +82,15 @@ public class MyRectF extends RectF {
 
     public int isPointMove(MyPoint point) {
         if (point.getX() < centerPoint.getX()) {
-            if (point.getY() < centerPoint.getY() && Math.abs(point.getX() - this.left) < 50 && Math.abs(point.getY() - this.top) < 50)
+            if (point.getY() < centerPoint.getY() && Math.abs(point.getX() - this.left) < 25 && Math.abs(point.getY() - this.top) < 25)
                 return POINT_TOP_LEFT;
-            if (point.getY() >= centerPoint.getY() && Math.abs(point.getX() - this.left) < 50 && Math.abs(point.getY() - this.bottom) < 50)
+            if (point.getY() >= centerPoint.getY() && Math.abs(point.getX() - this.left) < 25 && Math.abs(point.getY() - this.bottom) < 25)
                 return POINT_BOTTOM_LEFT;
         }
         if (point.getX() >= centerPoint.getX()) {
-            if (point.getY() < centerPoint.getY() && Math.abs(point.getX() - this.right) < 50 && Math.abs(point.getY() - this.top) < 50)
+            if (point.getY() < centerPoint.getY() && Math.abs(point.getX() - this.right) < 25 && Math.abs(point.getY() - this.top) < 25)
                 return POINT_TOP_RIGHT;
-            if (point.getY() >= centerPoint.getY() && Math.abs(point.getX() - this.right) < 50 && Math.abs(point.getY() - this.bottom) < 50)
+            if (point.getY() >= centerPoint.getY() && Math.abs(point.getX() - this.right) < 25 && Math.abs(point.getY() - this.bottom) < 25)
                 return POINT_BOTTOM_RIGHT;
         }
         return NO_POINT;
