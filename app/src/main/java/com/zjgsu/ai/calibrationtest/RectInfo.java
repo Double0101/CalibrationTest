@@ -33,4 +33,11 @@ public class RectInfo {
     public void setRectNum(int rectNum) {
         this.rectNum = rectNum;
     }
+
+    public boolean hasRect() {
+        return rectNum != -1;
+    }
+    public boolean hasPoint() {
+        return pointNum != -1;
+    }
 }

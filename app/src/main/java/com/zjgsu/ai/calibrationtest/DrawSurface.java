@@ -160,29 +160,17 @@ public class DrawSurface extends SurfaceView {
             currentX = r;
             currentY = b;
             isTouched = true;
-            if (rectInfo.getPointNum() == 0) {
-                currentRect.left = currentX;
-                currentRect.top = currentY;
-            } else {
-                currentRect.right = currentX;
-                currentRect.bottom = currentY;
-            }
+            currentRect.modified(rectInfo.getPointNum(), r, b);
         } else if (rectInfo.getRectNum() == myRects.size()) {
             addRect(new MyRectF(l, t, r, b));
         }
         invalidate();
     }
 
-    public void moveRect(int index, float x1, float y1, float x2, float y2) {
-        currentRect = myRects.get(index);
-        float distanceX = x2 - x1, distanceY = y2 - y1;
-        if (copyRect == null) {
-            copyRect = new MyRectF(currentRect.left, currentRect.top, currentRect.right, currentRect.bottom);
-        }
-        currentRect.right = copyRect.right + distanceX;
-        currentRect.left = copyRect.left + distanceX;
-        currentRect.top = copyRect.top + distanceY;
-        currentRect.bottom = copyRect.bottom + distanceY;
+    public void moveRect(RectInfo info, float x1, float y1, float x2, float y2) {
+        if (currentRect == null) currentRect = myRects.get(info.getRectNum());
+        if (copyRect == null) copyRect = new MyRectF(currentRect.left, currentRect.top, currentRect.right, currentRect.bottom);
+        currentRect.move(copyRect, x2 - x1, y2 - y1);
         invalidate();
     }
 
@@ -202,7 +190,7 @@ public class DrawSurface extends SurfaceView {
     }
 
     public void clear() {
-        if (currentRect.height() < 50 || currentRect.width() < 50) {
+        if (currentRect != null && (currentRect.height() < 50 || currentRect.width() < 50)) {
             myRects.remove(currentRect);
         }
         currentRect = null;
@@ -228,7 +216,7 @@ public class DrawSurface extends SurfaceView {
         RectInfo result = new RectInfo();
         for (MyRectF rect : myRects) {
             result.setPointNum(rect.isPointMove(x, y));
-            if (result.getPointNum() != -1) {
+            if (result.hasPoint()) {
                 result.setRectNum(myRects.indexOf(rect));
                 break;
             }

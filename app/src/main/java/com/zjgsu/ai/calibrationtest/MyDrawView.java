@@ -117,14 +117,15 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
         return result;
     }
 
+    private void clear() {
+        currentMode = 0;
+        rectInfo.reset();
+        drawSurface.clear();
+    }
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         detector.onTouchEvent(event);
-        if (event.getAction() == MotionEvent.ACTION_UP) {
-            currentMode = 0;
-            rectInfo.reset();
-            drawSurface.clear();
-        }
+        if (event.getAction() == MotionEvent.ACTION_UP) clear();
         return true;
     }
 
@@ -160,11 +161,11 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
         float eL = e1.getX(), eT = e1.getY(), eR = e2.getX(), eB = e2.getY();
         if (eL > mLeft && eL < mRight && eT > mTop && eT < mBottom
                 && eR > mLeft && eR < mRight && eB > mTop && eB < mBottom) {
-            if (rectInfo.getRectNum() == -1) {
+            if (!rectInfo.hasRect()) {
                 rectInfo.setRectNum(drawSurface.getRect(eL, eT));
-                if (rectInfo.getRectNum() == -1) {
+                if (!rectInfo.hasRect()) {
                     rectInfo = drawSurface.getAjust(eL, eT);
-                    if (rectInfo.getRectNum() != -1) {
+                    if (rectInfo.hasRect()) {
                         currentMode = MODE_AJUST;
                     } else {
                         currentMode = MODE_DRAW;
@@ -180,10 +181,10 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
                     drawSurface.drawRect(rectInfo, e1.getX(), e1.getY(), e2.getX(), e2.getY());
                     break;
                 case MODE_MOVE:
-                    drawSurface.moveRect(rectInfo.getRectNum(), e1.getX(), e1.getY(), e2.getX(), e2.getY());
+                    drawSurface.moveRect(rectInfo, e1.getX(), e1.getY(), e2.getX(), e2.getY());
                     break;
                 default:
-                    drawSurface.clear();
+                    clear();
                     break;
             }
         }
