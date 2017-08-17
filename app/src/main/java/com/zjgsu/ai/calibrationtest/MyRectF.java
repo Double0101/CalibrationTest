@@ -14,33 +14,39 @@ public class MyRectF extends RectF {
     public static final int POINT_BOTTOM_LEFT = 2;
     public static final int POINT_BOTTOM_RIGHT = 3;
 
-    private float centerX;
-    private float centerY;
+    private MyPoint centerPoint;
 
     public MyRectF(float left, float top, float right, float bottom) {
         super(left, top, right, bottom);
-        centerX = (left + right) / 2;
-        centerY = (top + bottom) / 2;
+        centerPoint = new MyPoint((left + right) / 2, (top + bottom) / 2);
+    }
+    public MyRectF(MyPoint p1, MyPoint p2) {
+        super(p1.getX(), p1.getY(), p2.getX(), p2.getY());
+        centerPoint = new MyPoint((left + right) / 2, (top + bottom) / 2);
     }
 
-    public void setTopAndLeft(float x, float y) {
-        top = y;
-        left = x;
+    public static MyRectF copyRect(MyRectF rect) {
+        return new MyRectF(rect.left, rect.top, rect.right, rect.bottom);
     }
 
-    public void setTopAndRight(float x, float y) {
-        top = y;
-        right = x;
+    public void setTopAndLeft(MyPoint point) {
+        top = point.getY();
+        left = point.getX();
     }
 
-    public void setBottomAndLeft(float x, float y) {
-        bottom = y;
-        left = x;
+    public void setTopAndRight(MyPoint point) {
+        top = point.getY();
+        right = point.getX();
     }
 
-    public void setBottomAndRight(float x, float y) {
-        bottom = y;
-        right = x;
+    public void setBottomAndLeft(MyPoint point) {
+        bottom = point.getY();
+        left = point.getX();
+    }
+
+    public void setBottomAndRight(MyPoint point) {
+        bottom = point.getY();
+        right = point.getX();
     }
 
     public void move(MyRectF copy, float distanceX, float distanceY) {
@@ -51,36 +57,36 @@ public class MyRectF extends RectF {
         setCenter();
     }
 
-    public void modified(int point, float x, float y) {
-        if (point == NO_POINT) setBottomAndRight(x, y);
-        else if (point == POINT_TOP_LEFT) setTopAndLeft(x, y);
-        else if (point == POINT_TOP_RIGHT) setTopAndRight(x, y);
-        else if (point == POINT_BOTTOM_LEFT) setBottomAndLeft(x, y);
-        else if (point == POINT_BOTTOM_RIGHT) setBottomAndRight(x, y);
+    public void modified(int which, MyPoint point) {
+        if (which == NO_POINT) setBottomAndRight(point);
+        else if (which == POINT_TOP_LEFT) setTopAndLeft(point);
+        else if (which == POINT_TOP_RIGHT) setTopAndRight(point);
+        else if (which == POINT_BOTTOM_LEFT) setBottomAndLeft(point);
+        else if (which == POINT_BOTTOM_RIGHT) setBottomAndRight(point);
         setCenter();
     }
 
     private void setCenter() {
-        centerX = (right + left) / 2;
-        centerY = (top + bottom) / 2;
+        centerPoint.setX((right + left) / 2);
+        centerPoint.setY((top + bottom) / 2);
     }
 
-    public boolean isCenter(float x, float y) {
-        return Math.abs(centerX - x) < (width() / 3)
-                && Math.abs(centerY - y) < (height() / 3);
+    public boolean isCenter(MyPoint point) {
+        return Math.abs(MyPoint.distanceX(centerPoint, point)) < (width() / 3)
+                && Math.abs(MyPoint.distanceY(centerPoint, point)) < (height() / 3);
     }
 
-    public int isPointMove(float x, float y) {
-        if (x < centerX) {
-            if (y < centerY && Math.abs(x - this.left) < 50 && Math.abs(y - this.top) < 50)
+    public int isPointMove(MyPoint point) {
+        if (point.getX() < centerPoint.getX()) {
+            if (point.getY() < centerPoint.getY() && Math.abs(point.getX() - this.left) < 50 && Math.abs(point.getY() - this.top) < 50)
                 return POINT_TOP_LEFT;
-            if (y >= centerY && Math.abs(x - this.left) < 50 && Math.abs(y - this.bottom) < 50)
+            if (point.getY() >= centerPoint.getY() && Math.abs(point.getX() - this.left) < 50 && Math.abs(point.getY() - this.bottom) < 50)
                 return POINT_BOTTOM_LEFT;
         }
-        if (x >= centerX) {
-            if (y < centerY && Math.abs(x - this.right) < 50 && Math.abs(y - this.top) < 50)
+        if (point.getX() >= centerPoint.getX()) {
+            if (point.getY() < centerPoint.getY() && Math.abs(point.getX() - this.right) < 50 && Math.abs(point.getY() - this.top) < 50)
                 return POINT_TOP_RIGHT;
-            if (y >= centerY && Math.abs(x - this.right) < 50 && Math.abs(y - this.bottom) < 50)
+            if (point.getY() >= centerPoint.getY() && Math.abs(point.getX() - this.right) < 50 && Math.abs(point.getY() - this.bottom) < 50)
                 return POINT_BOTTOM_RIGHT;
         }
         return NO_POINT;

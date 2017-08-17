@@ -1,7 +1,6 @@
 package com.zjgsu.ai.calibrationtest;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
@@ -10,17 +9,10 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Shader;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AlertDialog;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.GestureDetector;
-import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.SurfaceHolder;
-import android.view.View;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -50,8 +42,7 @@ public class DrawSurface extends SurfaceView {
 
     private float multiple;
 
-    private float currentX;
-    private float currentY;
+    private MyPoint currentPoint;
 
     private SurfaceHolder holder;
 
@@ -125,12 +116,12 @@ public class DrawSurface extends SurfaceView {
                 canvas.drawRect(currentRect, mPaints[1]);
                 canvas.drawPoint(currentRect.left, currentRect.top, mPaints[4]);
                 canvas.drawPoint(currentRect.right, currentRect.bottom, mPaints[4]);
-                drawMagnifier(currentX, currentY, canvas);
+                drawMagnifier(currentPoint, canvas);
             }
         }
     }
 
-    private void drawMagnifier(float x, float y, Canvas canvas) {
+    private void drawMagnifier(MyPoint point, Canvas canvas) {
         if (!isInited) {
             isInited = true;
             imageView.buildDrawingCache();
@@ -141,36 +132,35 @@ public class DrawSurface extends SurfaceView {
         if (isTouched) {
             matrix.reset();
             if (multiple == 1) matrix.postTranslate(0, -magnifierRadius);
-            else matrix.postScale(multiple, multiple, x, y + magnifierRadius / (multiple - 1));
+            else matrix.postScale(multiple, multiple, point.getX(), point.getY() + magnifierRadius / (multiple - 1));
             mPaints[2].getShader().setLocalMatrix(matrix);
-            canvas.drawCircle(x, y - magnifierRadius, magnifierRadius, mPaints[2]);
-            drawSight(x, y, canvas);
+            canvas.drawCircle(point.getX(), point.getY() - magnifierRadius, magnifierRadius, mPaints[2]);
+            drawSight(point, canvas);
         }
     }
 
-    private void drawSight(float x, float y, Canvas canvas) {
-        canvas.drawLine(x - magnifierRadius, y - magnifierRadius, x + magnifierRadius, y - magnifierRadius, mPaints[5]);
-        canvas.drawLine(x, y - 2 * magnifierRadius, x, y, mPaints[5]);
-        canvas.drawPoint(x, y - magnifierRadius, mPaints[3]);
+    private void drawSight(MyPoint point, Canvas canvas) {
+        canvas.drawLine(point.getX() - magnifierRadius, point.getY() - magnifierRadius, point.getX() + magnifierRadius, point.getY() - magnifierRadius, mPaints[5]);
+        canvas.drawLine(point.getX(), point.getY() - 2 * magnifierRadius, point.getX(), point.getY(), mPaints[5]);
+        canvas.drawPoint(point.getX(), point.getY() - magnifierRadius, mPaints[3]);
     }
 
-    public void drawRect(RectInfo rectInfo, float l, float t, float r, float b) {
+    public void drawRect(RectInfo rectInfo, MyPoint p1, MyPoint p2) {
         if (rectInfo.getRectNum() < myRects.size()) {
             currentRect = myRects.get(rectInfo.getRectNum());
-            currentX = r;
-            currentY = b;
+            currentPoint = new MyPoint(p2);
             isTouched = true;
-            currentRect.modified(rectInfo.getPointNum(), r, b);
+            currentRect.modified(rectInfo.getPointNum(), currentPoint);
         } else if (rectInfo.getRectNum() == myRects.size()) {
-            addRect(new MyRectF(l, t, r, b));
+            addRect(new MyRectF(p1, p2));
         }
         invalidate();
     }
 
-    public void moveRect(RectInfo info, float x1, float y1, float x2, float y2) {
+    public void moveRect(RectInfo info, MyPoint p1, MyPoint p2) {
         if (currentRect == null) currentRect = myRects.get(info.getRectNum());
-        if (copyRect == null) copyRect = new MyRectF(currentRect.left, currentRect.top, currentRect.right, currentRect.bottom);
-        currentRect.move(copyRect, x2 - x1, y2 - y1);
+        if (copyRect == null) copyRect = MyRectF.copyRect(currentRect);
+        currentRect.move(copyRect, MyPoint.distanceX(p1, p2), MyPoint.distanceY(p1, p2));
         invalidate();
     }
 
@@ -193,11 +183,12 @@ public class DrawSurface extends SurfaceView {
         if (currentRect != null && (currentRect.height() < 50 || currentRect.width() < 50)) {
             myRects.remove(currentRect);
         }
+        if (currentPoint != null) {
+            currentPoint.reset();
+        }
         currentRect = null;
         copyRect = null;
         isTouched = false;
-        currentX = -1;
-        currentY = -1;
         invalidate();
     }
 
@@ -205,17 +196,17 @@ public class DrawSurface extends SurfaceView {
         return myRects.size();
     }
 
-    public int getRect(float x, float y) {
+    public int getRect(MyPoint point) {
         for (int i = 0; i < myRects.size(); ++i)
-            if (myRects.get(i).isCenter(x, y))
+            if (myRects.get(i).isCenter(point))
                 return i;
         return -1;
     }
 
-    public RectInfo getAjust(float x, float y) {
+    public RectInfo getAjust(MyPoint point) {
         RectInfo result = new RectInfo();
         for (MyRectF rect : myRects) {
-            result.setPointNum(rect.isPointMove(x, y));
+            result.setPointNum(rect.isPointMove(point));
             if (result.hasPoint()) {
                 result.setRectNum(myRects.indexOf(rect));
                 break;

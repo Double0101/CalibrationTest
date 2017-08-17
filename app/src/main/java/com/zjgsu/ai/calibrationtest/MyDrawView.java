@@ -45,7 +45,7 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
 
     private RectInfo rectInfo;
 
-    private float mLeft, mRight, mTop, mBottom;
+    private MyPoint boundA, boundB;
 
     public MyDrawView(@NonNull Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
@@ -70,12 +70,12 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
             Bitmap bitmap = BitmapFactory.decodeFile(path);
             imageView.setImageBitmap(bitmap);
             imageView.setAdjustViewBounds(true);
-            getWH();
+            getBound();
             if (mCalibration.getAreaRects() != null) {
                 ArrayList<MyRectF> rects = new ArrayList<>();
                 for (MyRectF rect : mCalibration.getAreaRects()) {
-                    rects.add(new MyRectF(rect.left + mLeft, rect.top + mTop,
-                            rect.right + mLeft, rect.bottom + mTop));
+                    rects.add(new MyRectF(rect.left + boundA.getX(), rect.top + boundA.getY(),
+                            rect.right + boundA.getX(), rect.bottom + boundA.getY()));
                 }
                 drawSurface.setRects(rects);
             }
@@ -83,7 +83,7 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
         }
     }
     // 获得imageview的宽高
-    private void getWH() {
+    private void getBound() {
         int viewW = imageView.getWidth();
         int viewH = imageView.getHeight();
         int dw = imageView.getDrawable().getBounds().width();
@@ -95,11 +95,8 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
         float sy = values[4];
         float cw = dw * sx;
         float ch = dh * sy;
-
-        mLeft = (viewW - cw) / 2;
-        mTop = (viewH - ch) / 2;
-        mRight = viewW - mLeft;
-        mBottom = viewH - mTop;
+        boundA = new MyPoint((viewW - cw) / 2, (viewH - ch) / 2);
+        boundB = new MyPoint(viewW - boundA.getX(), viewH - boundA.getY());
     }
 
     public void setMultiple(int i) {
@@ -109,10 +106,10 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
     public MyRectF[] getRects() {
         MyRectF[] result = drawSurface.getRects();
         for (MyRectF rect : result) {
-            rect.left -= mLeft;
-            rect.top -= mTop;
-            rect.right -= mLeft;
-            rect.right -= mTop;
+            rect.left -= boundA.getX();
+            rect.top -= boundA.getY();
+            rect.right -= boundA.getX();
+            rect.right -= boundA.getY();
         }
         return result;
     }
@@ -121,6 +118,21 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
         currentMode = 0;
         rectInfo.reset();
         drawSurface.clear();
+    }
+
+    private int modeManage(MyPoint point) {
+        rectInfo.setRectNum(drawSurface.getRect(point));
+        if (!rectInfo.hasRect()) {
+            rectInfo = drawSurface.getAjust(point);
+            if (rectInfo.hasRect()) {
+                return MODE_AJUST;
+            } else {
+                rectInfo.setRectNum(drawSurface.getSize());
+                return MODE_DRAW;
+            }
+        } else {
+            return MODE_MOVE;
+        }
     }
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -131,8 +143,8 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
-        float eX = e.getX(), eY = e.getY();
-        final int which = drawSurface.getRect(eX, eY);
+        MyPoint pointE = new MyPoint(e);
+        final int which = drawSurface.getRect(pointE);
         if (which == -1) {
             Toast.makeText(getContext(), "您并没有选择任何标注区域", Toast.LENGTH_SHORT).show();
             return false;
@@ -158,30 +170,20 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
 
     @Override
     public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-        float eL = e1.getX(), eT = e1.getY(), eR = e2.getX(), eB = e2.getY();
-        if (eL > mLeft && eL < mRight && eT > mTop && eT < mBottom
-                && eR > mLeft && eR < mRight && eB > mTop && eB < mBottom) {
+        MyPoint p1 = new MyPoint(e1);
+        MyPoint p2 = new MyPoint(e2);
+        if (p1.getX() > boundA.getX() && p1.getX() < boundB.getX() && p1.getY() > boundA.getY() && p1.getY() < boundB.getY()
+                && p2.getX() > boundA.getX() && p2.getX() < boundB.getX() && p2.getY() > boundA.getY() && p2.getY() < boundB.getY()) {
             if (!rectInfo.hasRect()) {
-                rectInfo.setRectNum(drawSurface.getRect(eL, eT));
-                if (!rectInfo.hasRect()) {
-                    rectInfo = drawSurface.getAjust(eL, eT);
-                    if (rectInfo.hasRect()) {
-                        currentMode = MODE_AJUST;
-                    } else {
-                        currentMode = MODE_DRAW;
-                        rectInfo.setRectNum(drawSurface.getSize());
-                    }
-                } else {
-                    currentMode = MODE_MOVE;
-                }
+                currentMode = modeManage(p1);
             }
             switch (currentMode) {
                 case MODE_DRAW:
                 case MODE_AJUST:
-                    drawSurface.drawRect(rectInfo, e1.getX(), e1.getY(), e2.getX(), e2.getY());
+                    drawSurface.drawRect(rectInfo, p1, p2);
                     break;
                 case MODE_MOVE:
-                    drawSurface.moveRect(rectInfo, e1.getX(), e1.getY(), e2.getX(), e2.getY());
+                    drawSurface.moveRect(rectInfo, p1, p2);
                     break;
                 default:
                     clear();
