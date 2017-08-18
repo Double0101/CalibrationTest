@@ -69,9 +69,9 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
             imageView.setImageBitmap(bitmap);
             imageView.setAdjustViewBounds(true);
             getBound();
-            if (mAnnotatedImage.getAreaRects() != null) {
+            if (mAnnotatedImage.getAnnotationRects() != null) {
                 ArrayList<MyRectF> rects = new ArrayList<>();
-                for (MyRectF rect : mAnnotatedImage.getAreaRects()) {
+                for (MyRectF rect : mAnnotatedImage.getAnnotationRects()) {
                     rects.add(new MyRectF(rect.left + boundA.getX(), rect.top + boundA.getY(),
                             rect.right + boundA.getX(), rect.bottom + boundA.getY()));
                 }

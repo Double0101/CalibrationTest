@@ -1,7 +1,5 @@
 package com.zjgsu.ai.calibrationtest;
 
-import android.graphics.RectF;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -12,13 +10,11 @@ import org.json.JSONObject;
 public class AnnotatedImage {
 
     private static final String JSON_CATEGORY = "category";
-    private static final String JSON_AREA = "area";
+    private static final String JSON_ANNOTATION = "annotation";
     private static final String JSON_PHOTO = "path";
 
-    private static int count = 0;
-
     private String category;
-    private Area mArea;
+    private Annotation mAnnotation;
     private Photo src;
 
     public String getCategory() {
@@ -33,16 +29,16 @@ public class AnnotatedImage {
     public AnnotatedImage(JSONObject json) throws JSONException {
         category = json.getString(JSON_CATEGORY);
         src = new Photo(json.getJSONObject(JSON_PHOTO));
-        if (json.has(JSON_AREA))
-            mArea = new Area(json.getJSONObject(JSON_AREA));
+        if (json.has(JSON_ANNOTATION))
+            mAnnotation = new Annotation(json.getJSONObject(JSON_ANNOTATION));
     }
 
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
         json.put(JSON_CATEGORY, category);
         json.put(JSON_PHOTO, src.toJSON());
-        if (mArea != null)
-            json.put(JSON_AREA, mArea.toJSON());
+        if (mAnnotation != null)
+            json.put(JSON_ANNOTATION, mAnnotation.toJSON());
         return json;
     }
 
@@ -54,17 +50,17 @@ public class AnnotatedImage {
         this.src = src;
     }
 
-    public void setArea(Area area) {
-        this.mArea = area;
+    public void setAnnotation(Annotation annotation) {
+        this.mAnnotation = annotation;
     }
 
-    public Area getArea() {
-        return mArea;
+    public Annotation getAnnotation() {
+        return mAnnotation;
     }
 
-    public MyRectF[] getAreaRects() {
-        if (mArea != null) {
-            return mArea.getRects();
+    public MyRectF[] getAnnotationRects() {
+        if (mAnnotation != null) {
+            return mAnnotation.getRects();
         } else
             return null;
     }

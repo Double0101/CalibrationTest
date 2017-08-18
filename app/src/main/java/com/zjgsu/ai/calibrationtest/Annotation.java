@@ -11,15 +11,15 @@ import org.json.JSONObject;
  * Created by Double on 2017/4/24.
  */
 
-public class Area {
+public class Annotation {
 
-    private static final String AREA = "area";
+    private static final String ANNOTATION = "annotation";
 
     private MyRectF[] rectFs;
 
     private Gson gson = new Gson();
 
-    public Area(MyRectF[] points) {
+    public Annotation(MyRectF[] points) {
         this.rectFs = points;
     }
 
@@ -27,15 +27,15 @@ public class Area {
         return rectFs;
     }
 
-    public Area(JSONObject json) throws JSONException {
-        String str = json.getString(AREA);
+    public Annotation(JSONObject json) throws JSONException {
+        String str = json.getString(ANNOTATION);
         rectFs = gson.fromJson(str, MyRectF[].class);
     }
 
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
         String str = gson.toJson(rectFs);
-        json.put(AREA, str);
+        json.put(ANNOTATION, str);
 
         return json;
     }
