@@ -10,6 +10,7 @@ import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Shader;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.SurfaceView;
 import android.view.SurfaceHolder;
 import android.widget.ImageView;
@@ -192,6 +193,15 @@ public class DrawSurface extends SurfaceView {
     public void addRect(MyRectF rectF) {
         rectF.minusBound(boundA);
         annotatedList.add(rectF);
+        invalidate();
+    }
+
+    public void setAnnCategory(int category) {
+        Log.i(TAG, category + "");
+        annotatedList.get(getSize() - 1).setCategory(category);
+    }
+    public void removeWithoutCategory() {
+        annotatedList.remove(getSize() - 1);
         invalidate();
     }
 

@@ -1,5 +1,7 @@
 package com.zjgsu.ai.calibrationtest;
 
+import android.util.Log;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 
 public class AnnotatedImage {
 
+    public static final String[] ANNOTATION_CATEGORY = {"人", "车", "路标", "红绿灯"};
     private static final String JSON_ANNOTATION = "annotations";
     private static final String JSON_PHOTO = "path";
 
@@ -71,6 +74,7 @@ public class AnnotatedImage {
 
     public void remove(int index) {
         mAnnotations.remove(index);
+
     }
 
     public void remove(Annotation anno) {

@@ -27,8 +27,12 @@ public class Annotation {
         return rectF;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
+    public void setCategory(int category) {
+        this.category = AnnotatedImage.ANNOTATION_CATEGORY[category];
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     public Annotation(JSONObject json) throws JSONException {

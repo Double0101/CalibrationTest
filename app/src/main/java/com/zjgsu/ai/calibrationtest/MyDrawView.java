@@ -35,9 +35,9 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
 
     private DrawSurface drawSurface;
 
-    private AnnotatedImage mAnnotatedImage;
+    private int category;
 
-    private String category;
+    private AnnotatedImage mAnnotatedImage;
 
     private GestureDetector detector;
 
@@ -130,8 +130,43 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         detector.onTouchEvent(event);
-        if (event.getAction() == MotionEvent.ACTION_UP) clear();
+        if (event.getAction() == MotionEvent.ACTION_UP) {
+            if (currentMode == MODE_DRAW) {
+                setAnnCategory();
+            } else {
+                clear();
+            }
+        }
         return true;
+    }
+
+    private void setAnnCategory() {
+        final String[] items = AnnotatedImage.ANNOTATION_CATEGORY;
+        final AlertDialog.Builder myDialog = new AlertDialog.Builder(getContext());
+        myDialog.setTitle("选择标定种类");
+        myDialog.setSingleChoiceItems(items, 0,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        category = which;
+                    }
+                });
+        myDialog.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                drawSurface.setAnnCategory(category);
+                clear();
+                dialog.cancel();
+            }
+        });
+        myDialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                drawSurface.removeWithoutCategory();
+                clear();
+            }
+        });
+        myDialog.show();
     }
 
     @Override
