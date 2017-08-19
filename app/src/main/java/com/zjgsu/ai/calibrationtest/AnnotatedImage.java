@@ -1,7 +1,12 @@
 package com.zjgsu.ai.calibrationtest;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 /**
  * Created by Double on 2017/4/24.
@@ -9,60 +14,83 @@ import org.json.JSONObject;
 
 public class AnnotatedImage {
 
-    private static final String JSON_CATEGORY = "category";
-    private static final String JSON_ANNOTATION = "annotation";
+    private static final String JSON_ANNOTATION = "annotations";
     private static final String JSON_PHOTO = "path";
 
-    private String category;
-    private Annotation mAnnotation;
+    private ArrayList<Annotation> mAnnotations;
     private Photo src;
 
-    public String getCategory() {
-        return category;
-    }
-
-    public AnnotatedImage(String category, String path) {
-        this.category = category;
+    public AnnotatedImage(String path) {
         this.src = new Photo(path);
+        mAnnotations = new ArrayList<>();
     }
 
     public AnnotatedImage(JSONObject json) throws JSONException {
-        category = json.getString(JSON_CATEGORY);
         src = new Photo(json.getJSONObject(JSON_PHOTO));
-        if (json.has(JSON_ANNOTATION))
-            mAnnotation = new Annotation(json.getJSONObject(JSON_ANNOTATION));
+        if (json.has(JSON_ANNOTATION)) {
+            Gson gson = new Gson();
+            mAnnotations = gson.fromJson(json.getString(JSON_ANNOTATION), new TypeToken<ArrayList<Annotation>>(){}.getType());
+        } else {
+            mAnnotations = new ArrayList<>();
+        }
     }
+
+
 
     public JSONObject toJSON() throws JSONException {
         JSONObject json = new JSONObject();
-        json.put(JSON_CATEGORY, category);
         json.put(JSON_PHOTO, src.toJSON());
-        if (mAnnotation != null)
-            json.put(JSON_ANNOTATION, mAnnotation.toJSON());
+        if (mAnnotations != null) {
+            Gson gson = new Gson();
+            String str = gson.toJson(mAnnotations);
+            json.put(JSON_ANNOTATION, str);
+        }
         return json;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
     }
 
     public void setSrc(Photo src) {
         this.src = src;
     }
 
-    public void setAnnotation(Annotation annotation) {
-        this.mAnnotation = annotation;
+    public void update(AnnotatedImage annotatedImage) {
+        mAnnotations = annotatedImage.getAnnotations();
+        src = annotatedImage.getSrc();
     }
 
-    public Annotation getAnnotation() {
-        return mAnnotation;
+    public void add(MyRectF rectF) {
+        mAnnotations.add(new Annotation(rectF));
     }
 
-    public MyRectF[] getAnnotationRects() {
-        if (mAnnotation != null) {
-            return mAnnotation.getRects();
-        } else
-            return null;
+    public Annotation get(int index) {
+        return mAnnotations.get(index);
+    }
+
+    public int indexOf(Annotation ann) {
+        return mAnnotations.indexOf(ann);
+    }
+
+    public void remove(int index) {
+        mAnnotations.remove(index);
+    }
+
+    public void remove(Annotation anno) {
+        mAnnotations.remove(anno);
+    }
+
+    public ArrayList<Annotation> getAnnotations() {
+        return mAnnotations;
+    }
+
+    public boolean hasAnn() {
+        if (mAnnotations == null || mAnnotations.size() == 0) return false;
+        return true;
+    }
+    public Photo getSrc() {
+        return src;
+    }
+
+    public int getSize() {
+        return mAnnotations.size();
     }
 
     public String getPhotoPath() {
@@ -71,6 +99,6 @@ public class AnnotatedImage {
 
     @Override
     public String toString() {
-        return category;
+        return src.toString();
     }
 }

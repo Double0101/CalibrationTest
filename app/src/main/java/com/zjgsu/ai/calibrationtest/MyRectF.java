@@ -57,6 +57,14 @@ public class MyRectF extends RectF {
         setCenter();
     }
 
+    public void minusBound(MyPoint point) {
+        top -= point.getY();
+        bottom -= point.getY();
+        left -= point.getX();
+        right -= point.getX();
+        setCenter();
+    }
+
     public void modified(int which, MyPoint point) {
         if (which == NO_POINT) setBottomAndRight(point);
         else if (which == POINT_TOP_LEFT) setTopAndLeft(point);

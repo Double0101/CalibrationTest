@@ -39,7 +39,7 @@ public class AnnotationActivity extends AppCompatActivity {
 
     public void touchFinish(View view) {
         AnnotationLab.get(getApplication()).getAnnotatedImages()
-                .get(index).setAnnotation(new Annotation(myDrawView.getRects()));
+                .get(index).update(myDrawView.getAnnotatedImage());
         finish();
     }
 

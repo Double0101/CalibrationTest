@@ -23,12 +23,10 @@ import java.io.FileNotFoundException;
 
 public class AnnotatePreActivity extends AppCompatActivity{
     private ImageView imageView;
-    private EditText editText;
     private Button button1;
     private Button button2;
 
     private String path;
-    private String category;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -47,15 +45,12 @@ public class AnnotatePreActivity extends AppCompatActivity{
             }
         });
 
-        editText = (EditText) findViewById(R.id.edit_text);
-
         button1 = (Button) findViewById(R.id.button1);
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                category = editText.getText().toString();
-                if (path != null && category != null) {
-                    AnnotationLab.get(getApplication()).addAnnotation(new AnnotatedImage(category, path));
+                if (path != null) {
+                    AnnotationLab.get(getApplication()).addAnnotation(new AnnotatedImage(path));
                     finish();
                 }
             }

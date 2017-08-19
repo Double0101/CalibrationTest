@@ -37,6 +37,8 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
 
     private AnnotatedImage mAnnotatedImage;
 
+    private String category;
+
     private GestureDetector detector;
 
     private Context mContext;
@@ -69,13 +71,10 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
             imageView.setImageBitmap(bitmap);
             imageView.setAdjustViewBounds(true);
             getBound();
-            if (mAnnotatedImage.getAnnotationRects() != null) {
-                ArrayList<MyRectF> rects = new ArrayList<>();
-                for (MyRectF rect : mAnnotatedImage.getAnnotationRects()) {
-                    rects.add(new MyRectF(rect.left + boundA.getX(), rect.top + boundA.getY(),
-                            rect.right + boundA.getX(), rect.bottom + boundA.getY()));
-                }
-                drawSurface.setRects(rects);
+            if (mAnnotatedImage.hasAnn()) {
+                drawSurface.setAnnotatedList(mAnnotatedImage);
+            } else {
+                drawSurface.setAnnotatedList(new AnnotatedImage(path));
             }
             isInited = true;
         }
@@ -95,21 +94,17 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
         float ch = dh * sy;
         boundA = new MyPoint((viewW - cw) / 2, (viewH - ch) / 2);
         boundB = new MyPoint(viewW - boundA.getX(), viewH - boundA.getY());
+
+        drawSurface.setBound(new MyPoint((viewW - cw) / 2, (viewH - ch) / 2),
+                new MyPoint(viewW - boundA.getX(), viewH - boundA.getY()));
     }
 
     public void setMultiple(int i) {
         drawSurface.setMultiple(i);
     }
 
-    public MyRectF[] getRects() {
-        MyRectF[] result = drawSurface.getRects();
-        for (MyRectF rect : result) {
-            rect.left -= boundA.getX();
-            rect.top -= boundA.getY();
-            rect.right -= boundA.getX();
-            rect.right -= boundA.getY();
-        }
-        return result;
+    public AnnotatedImage getAnnotatedImage() {
+        return drawSurface.getAnnotationList();
     }
 
     private void clear() {
@@ -119,9 +114,9 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
     }
 
     private int modeManage(MyPoint point) {
-        rectInfo.setRectNum(drawSurface.getRect(point));
+        rectInfo.setRectNum(drawSurface.getRect(point.getMinusBound(boundA)));
         if (!rectInfo.hasRect()) {
-            rectInfo = drawSurface.getAjust(point);
+            rectInfo = drawSurface.getAjust(point.getMinusBound(boundA));
             if (rectInfo.hasRect()) {
                 return MODE_AJUST;
             } else {
@@ -141,8 +136,7 @@ public class MyDrawView extends RelativeLayout implements GestureDetector.OnGest
 
     @Override
     public boolean onDoubleTap(MotionEvent e) {
-        MyPoint pointE = new MyPoint(e);
-        final int which = drawSurface.getRect(pointE);
+        final int which = drawSurface.getRect(new MyPoint(e).getMinusBound(boundA));
         if (which == -1) {
             Toast.makeText(getContext(), "您并没有选择任何标注区域", Toast.LENGTH_SHORT).show();
             return false;

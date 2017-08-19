@@ -46,4 +46,11 @@ public class MyPoint {
     public void setY(float y) {
         this.y = y;
     }
+
+    public MyPoint getMinusBound(MyPoint bound) {
+        return new MyPoint(x - bound.getX(), y - bound.getY());
+    }
+    public MyPoint getPlusBound(MyPoint bound) {
+        return new MyPoint(x + bound.getX(), y + bound.getY());
+    }
 }

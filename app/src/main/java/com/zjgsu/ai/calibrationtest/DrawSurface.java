@@ -22,9 +22,9 @@ import java.util.ArrayList;
 
 public class DrawSurface extends SurfaceView {
     private static final String TAG = "AnnotatedImage-Click";
-    private ArrayList<MyRectF> myRects;
+    private AnnotatedImage annotatedList;
 
-    private MyRectF currentRect;
+    private Annotation currentAnnotation;
     private MyRectF copyRect;
 
     private Paint[] mPaints;
@@ -42,6 +42,9 @@ public class DrawSurface extends SurfaceView {
 
     private float multiple;
 
+    private MyPoint boundA;
+    private MyPoint boundB;
+
     private MyPoint currentPoint;
 
     private SurfaceHolder holder;
@@ -50,10 +53,10 @@ public class DrawSurface extends SurfaceView {
         super(context, attrs);
         setWillNotDraw(false);
         setZOrderOnTop(true);
-        myRects = new ArrayList<MyRectF>();
         holder = getHolder();
-
-        currentRect = null;
+        boundA = new MyPoint(0, 0);
+        boundB = new MyPoint(0, 0);
+        currentAnnotation = null;
         holder.setFormat(PixelFormat.TRANSPARENT);
         holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         initPaint();
@@ -66,8 +69,17 @@ public class DrawSurface extends SurfaceView {
         this.imageView = imageView;
     }
 
+    public void setAnnotatedList(AnnotatedImage ann) {
+        annotatedList = ann;
+    }
+
+    public void setBound(MyPoint a, MyPoint b) {
+        boundA = a;
+        boundB = b;
+    }
+
     private void initPaint() {
-        mPaints  = new Paint[6];
+        mPaints = new Paint[6];
         mPaints[0] = new Paint();
         mPaints[0].setColor(Color.GREEN);
         mPaints[0].setStyle(Paint.Style.STROKE);
@@ -91,15 +103,8 @@ public class DrawSurface extends SurfaceView {
         mPaints[5].setStrokeWidth(4f);
     }
 
-    public MyRectF[] getRects() {
-        MyRectF[] giveRect = new MyRectF[myRects.size()];
-        for (int i = 0; i < myRects.size(); ++i)
-            giveRect[i] = new MyRectF(
-                    myRects.get(i).left,
-                    myRects.get(i).top,
-                    myRects.get(i).right,
-                    myRects.get(i).bottom);
-        return giveRect;
+    public AnnotatedImage getAnnotationList() {
+        return annotatedList;
     }
 
     public void setMultiple(float multiple) {
@@ -109,13 +114,16 @@ public class DrawSurface extends SurfaceView {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if (myRects != null) {
-            for (int i = 0; i < myRects.size(); ++i)
-                canvas.drawRect(myRects.get(i), mPaints[0]);
-            if (currentRect != null) {
-                canvas.drawRect(currentRect, mPaints[1]);
-                canvas.drawPoint(currentRect.left, currentRect.top, mPaints[4]);
-                canvas.drawPoint(currentRect.right, currentRect.bottom, mPaints[4]);
+        if (annotatedList != null) {
+            for (Annotation anno : annotatedList.getAnnotations()) {
+                canvas.drawRect(anno.getMinusBoundRect(boundA), mPaints[0]);
+            }
+            if (currentAnnotation != null) {
+                canvas.drawRect(currentAnnotation.getMinusBoundRect(boundA), mPaints[1]);
+                canvas.drawPoint(currentAnnotation.getRect().left + boundA.getX(),
+                        currentAnnotation.getRect().top + boundA.getY(), mPaints[4]);
+                canvas.drawPoint(currentAnnotation.getRect().right + boundA.getX(),
+                        currentAnnotation.getRect().bottom + boundA.getY(), mPaints[4]);
                 drawMagnifier(currentPoint, canvas);
             }
         }
@@ -132,7 +140,8 @@ public class DrawSurface extends SurfaceView {
         if (isTouched) {
             matrix.reset();
             if (multiple == 1) matrix.postTranslate(0, -magnifierRadius);
-            else matrix.postScale(multiple, multiple, point.getX(), point.getY() + magnifierRadius / (multiple - 1));
+            else
+                matrix.postScale(multiple, multiple, point.getX(), point.getY() + magnifierRadius / (multiple - 1));
             mPaints[2].getShader().setLocalMatrix(matrix);
             canvas.drawCircle(point.getX(), point.getY() - magnifierRadius, magnifierRadius, mPaints[2]);
             drawSight(point, canvas);
@@ -142,12 +151,12 @@ public class DrawSurface extends SurfaceView {
     private void drawSight(MyPoint point, Canvas canvas) {
         canvas.drawLine(point.getX() - magnifierRadius, point.getY() - magnifierRadius, point.getX() + magnifierRadius, point.getY() - magnifierRadius, mPaints[5]);
         canvas.drawLine(point.getX(), point.getY() - 2 * magnifierRadius, point.getX(), point.getY(), mPaints[5]);
-        if (currentPoint.getY() > currentRect.getCenter().getY()) {
+        if (currentPoint.getY() > currentAnnotation.getRect().getCenter().getY() + boundA.getY()) {
             canvas.drawLine(point.getX(), point.getY() - 2 * magnifierRadius, point.getX(), point.getY() - magnifierRadius, mPaints[1]);
         } else {
             canvas.drawLine(point.getX(), point.getY() - magnifierRadius, point.getX(), point.getY(), mPaints[1]);
         }
-        if (currentPoint.getX() > currentRect.getCenter().getX()) {
+        if (currentPoint.getX() > currentAnnotation.getRect().getCenter().getX() + boundA.getX()) {
             canvas.drawLine(point.getX() - magnifierRadius, point.getY() - magnifierRadius, point.getX(), point.getY() - magnifierRadius, mPaints[1]);
         } else {
             canvas.drawLine(point.getX(), point.getY() - magnifierRadius, point.getX() + magnifierRadius, point.getY() - magnifierRadius, mPaints[1]);
@@ -156,74 +165,70 @@ public class DrawSurface extends SurfaceView {
     }
 
     public void drawRect(RectInfo rectInfo, MyPoint p1, MyPoint p2) {
-        if (rectInfo.getRectNum() < myRects.size()) {
-            currentRect = myRects.get(rectInfo.getRectNum());
-            currentPoint = new MyPoint(p2);
+        if (rectInfo.getRectNum() < annotatedList.getSize()) {
+            currentAnnotation = annotatedList.get(rectInfo.getRectNum());
+            currentPoint = new MyPoint(p2.getX(), p2.getY());
             isTouched = true;
-            currentRect.modified(rectInfo.getPointNum(), currentPoint);
-        } else if (rectInfo.getRectNum() == myRects.size()) {
+            currentAnnotation.modifiedRect(rectInfo.getPointNum(), p2.getMinusBound(boundA));
+        } else if (rectInfo.getRectNum() == annotatedList.getSize()) {
             addRect(new MyRectF(p1, p2));
         }
         invalidate();
     }
 
     public void moveRect(RectInfo info, MyPoint p1, MyPoint p2) {
-        if (currentRect == null) currentRect = myRects.get(info.getRectNum());
-        if (copyRect == null) copyRect = MyRectF.copyRect(currentRect);
-        currentRect.move(copyRect, MyPoint.distanceX(p1, p2), MyPoint.distanceY(p1, p2));
+        if (currentAnnotation == null)
+            currentAnnotation = annotatedList.get(info.getRectNum());
+        if (copyRect == null) copyRect = MyRectF.copyRect(currentAnnotation.getRect());
+        currentAnnotation.moveRect(copyRect, MyPoint.distanceX(p1, p2), MyPoint.distanceY(p1, p2));
         invalidate();
     }
 
     public void removeRect(int which) {
-        myRects.remove(which);
+        annotatedList.remove(which);
         invalidate();
     }
 
     public void addRect(MyRectF rectF) {
-        myRects.add(rectF);
-        invalidate();
-    }
-
-    public void setRects(ArrayList<MyRectF> rects) {
-        myRects = rects;
+        rectF.minusBound(boundA);
+        annotatedList.add(rectF);
         invalidate();
     }
 
     public void clear() {
-        if (currentRect != null && (currentRect.height() < 20 || currentRect.width() < 20)) {
-            myRects.remove(currentRect);
+        if (currentAnnotation != null && (currentAnnotation.getRect().height() < 20 || currentAnnotation.getRect().width() < 20)) {
+            annotatedList.remove(currentAnnotation);
         }
         if (currentPoint != null) {
             currentPoint.reset();
         }
-        currentRect = null;
+        currentAnnotation = null;
         copyRect = null;
         isTouched = false;
         invalidate();
     }
 
     public int getSize() {
-        return myRects.size();
+        return annotatedList.getSize();
     }
 
     public int getRect(MyPoint point) {
-        for (int i = 0; i < myRects.size(); ++i)
-            if (myRects.get(i).isCenter(point))
+        for (int i = 0; i < annotatedList.getSize(); ++i)
+            if (annotatedList.get(i).isCenter(point))
                 return i;
         return -1;
     }
 
     public RectInfo getAjust(MyPoint point) {
         RectInfo result = new RectInfo();
-        for (MyRectF rect : myRects) {
-            result.setPointNum(rect.isPointMove(point));
+        for (Annotation anno : annotatedList.getAnnotations()) {
+            result.setPointNum(anno.isPointMove(point));
             if (result.hasPoint()) {
-                result.setRectNum(myRects.indexOf(rect));
+                result.setRectNum(annotatedList.indexOf(anno));
                 break;
             }
         }
         return result;
     }
-
 
 }
